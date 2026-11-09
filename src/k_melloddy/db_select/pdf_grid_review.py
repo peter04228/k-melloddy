@@ -17,7 +17,18 @@ def selected_pdf_grids(bundle, selections):
         with fitz.open(stream=raw,filetype='pdf') as document:
             page=selection['page'];table=selection['table']
             if type(page)!=int or not 0<=page<len(document)<=64:raise ValueError('PDF page limit')
-            tables=document[page].find_tables().tables
+            settings=selection.get('table_settings',{})
+            if settings:
+                if set(settings)!={'vertical_lines','horizontal_strategy'} or settings['horizontal_strategy']!='text':
+                    raise ValueError('Unsupported explicit PDF table settings')
+                lines=settings['vertical_lines']
+                if (not isinstance(lines,list) or not 2<=len(lines)<=101
+                    or any(type(x) not in {int,float} or not 0<=x<=document[page].rect.width for x in lines)
+                    or any(a>=b for a,b in zip(lines,lines[1:]))):
+                    raise ValueError('Invalid explicit PDF column boundaries')
+                tables=document[page].find_tables(vertical_strategy='explicit',
+                    vertical_lines=lines,horizontal_strategy='text').tables
+            else:tables=document[page].find_tables().tables
             if type(table)!=int or not 0<=table<len(tables):raise ValueError('PDF table index')
             grid=tables[table].extract()
             start=selection['data_row_start']
@@ -37,8 +48,14 @@ def selected_pdf_grids(bundle, selections):
         if columns!=selection['expected_columns']:raise ValueError('PDF headers changed')
         start=selection['data_row_start'];end=selection['data_row_end']
         if type(start)!=int or type(end)!=int or not 0<=start<end<=len(grid):raise ValueError('PDF row bounds')
+        selected_rows=selection.get('row_indices',list(range(start,end)))
+        if (not isinstance(selected_rows,list) or not selected_rows
+            or any(type(i)!=int or not start<=i<end for i in selected_rows)
+            or selected_rows!=sorted(set(selected_rows))):
+            raise ValueError('Invalid explicit PDF row indices')
         rows=[]
-        for row in grid[start:end]:
+        for i in selected_rows:
+            row=grid[i]
             if any(i>=len(row) or not isinstance(row[i],str) or not row[i].strip() for i in indexes):
                 raise ValueError('Missing PDF data cell; explicit review required')
             rows.append([row[i].strip() for i in indexes])

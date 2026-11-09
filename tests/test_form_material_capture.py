@@ -118,3 +118,40 @@ def test_caption_from_another_page_cannot_assign_its_drug_to_selected_table(tmp_
         expected_columns=['Pathways','Both','Up'],data_row_start=1,data_row_end=3,
         caption_quote='Dexamethasone Human in vitro 8hr')
     with pytest.raises(ValueError,match='not above'):selected_pdf_grids({'records':[material]},[selection])
+
+
+def test_explicit_unruled_pdf_cells_preserve_real_headers_rows_and_original():
+    fitz=pytest.importorskip('fitz')
+    doc=fitz.open();page=doc.new_page()
+    caption='Actual hepatic injury counts from a reporting database, not incidence or causal labels'
+    page.insert_text((50,40),caption)
+    for j,row in enumerate([['Drug','Cases','ROR'],['A','4','1.98*'],['B','0','NA']]):
+        for i,value in enumerate(row):page.insert_text((55+100*i,90+30*j),value)
+    pdf=doc.tobytes()
+    material=dict(evidence_id='unruled',kind='file',status='accessible',http_status=200,
+        complete_body=True,bytes_observed=len(pdf),payload_sha256=digest(pdf),
+        body_sample_b64=base64.b64encode(pdf).decode(),text=page.get_text())
+    bundle={'records':[material]};original=copy.deepcopy(bundle)
+    selection=dict(parent_evidence_id='unruled',page=0,table=0,
+        table_settings={'vertical_lines':[50,150,250,350],'horizontal_strategy':'text'},
+        header_cells=[[2,0],[2,1],[2,2]],expected_columns=['Drug','Cases','ROR'],
+        data_row_start=4,data_row_end=7,row_indices=[4,6],caption_quote=caption)
+    result=selected_pdf_grids(bundle,[selection])
+    assert bundle==original
+    observed=result['records'][-1]
+    assert observed['columns']==['Drug','Cases','ROR']
+    assert observed['pdf_grid_rows']==[['A','4','1.98*'],['B','0','NA']]
+    assert observed['pdf_grid_selection']==selection
+    assert observed['payload_sha256']==digest(pdf)
+    assert observed['downloaded_full_dataset'] is False
+    assert selected_pdf_grids(result,[selection])==result
+    bad=copy.deepcopy(selection);bad['expected_columns']=['Drug','Endpoint','Value']
+    with pytest.raises(ValueError,match='headers changed'):selected_pdf_grids(bundle,[bad])
+    for indices in [[6,4],[4,4],[True],[4,7],[],[4,5,6]]:
+        bad=copy.deepcopy(selection);bad['row_indices']=indices
+        with pytest.raises(ValueError):selected_pdf_grids(bundle,[bad])
+    for lines in [[50,150,150,350],[50,350,250],[-1,150,350],[50,float('nan'),350],[True,350]]:
+        bad=copy.deepcopy(selection);bad['table_settings']['vertical_lines']=lines
+        with pytest.raises(ValueError,match='boundaries'):selected_pdf_grids(bundle,[bad])
+    bad=copy.deepcopy(selection);bad['table_settings']['horizontal_strategy']='lines'
+    with pytest.raises(ValueError,match='settings'):selected_pdf_grids(bundle,[bad])
