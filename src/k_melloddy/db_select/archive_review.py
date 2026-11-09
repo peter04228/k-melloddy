@@ -58,10 +58,10 @@ def selected_docx_tables(bundle, selections):
             interpretation_note='Selected table from captured DOCX; parent URL/HTTP metadata retained; no new request or inferred columns')
         if selection.get('include_preceding_paragraph'):
             # Bind exposure context to this table, never to an earlier case/table.
-            preceding=None
-            for node in tree.iter():
-                if node is table:break
-                if node.tag=='{'+ns['w']+'}p':preceding=node
+            container=next(node for node in tree.iter() if table in list(node))
+            siblings=list(container);position=siblings.index(table)
+            preceding=siblings[position-1] if position else None
+            if preceding is not None and preceding.tag!='{'+ns['w']+'}p':preceding=None
             context=' '.join(n.text or '' for n in preceding.findall('.//w:t',ns)) if preceding is not None else ''
             if not context.strip():raise ValueError('Selected DOCX table has no preceding paragraph')
             record['document_text']=context+' '+ ' '.join(rows[0])

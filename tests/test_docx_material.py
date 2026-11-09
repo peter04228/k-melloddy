@@ -46,6 +46,17 @@ def test_selected_docx_context_belongs_to_exact_table_and_supports_constant():
     assert bundle==before
 
 
+def test_selected_docx_context_cannot_come_from_previous_table_cell():
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    table=XML.split('<w:tbl>',1)[1].split('</w:tbl>',1)[0]
+    e=record(XML.replace('</w:tbl>','</w:tbl><w:tbl>'+table+'</w:tbl>'))
+    e.update(status='accessible',payload_sha256=digest(base64.b64decode(e['body_sample_b64'])))
+    with pytest.raises(ValueError,match='no preceding paragraph'):
+        selected_docx_tables({'records':[e]},[dict(parent_evidence_id='file',table_index=1,
+                                                 include_preceding_paragraph=True)])
+
+
 def test_selected_docx_inside_zip_preserves_captured_parent_and_hashes():
     from k_melloddy.core.storage import digest
     from k_melloddy.db_select.archive_review import selected_docx_tables
