@@ -61,6 +61,24 @@ def test_wrong_identity_never_follows_article_or_media_urls():
     assert all(e['kind']=='metadata' for e in result['records'])
 
 
+def test_listed_legacy_doc_is_accessible_bytes_without_claiming_structure():
+    raw=b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'+b'Synthetic opaque fixture, not a clinical table.'
+    md5=hashlib.md5(raw).hexdigest();url=BASE+'PMC123.1/supplement.doc?md5='+md5
+    metadata=dict(pmid=123,pmcid='PMC123',doi='10.1234/test',title='Synthetic liver study',media_urls=[url])
+    parent=dict(evidence_id='legacy',kind='file',status='fetch_error',http_status=200,url=url,final_url=url,
+                failure_reason='redirect_or_empty_body_not_article',complete_body=True,
+                body_sample_b64=base64.b64encode(raw).decode(),payload_sha256=digest(raw),bytes_observed=len(raw),
+                format='binary/octet-stream',text='',level='unverified',columns=[])
+    bundle={'records':[dict(kind='metadata',status='accessible',url=BASE+'PMC123.1/PMC123.1.json',text=json.dumps(metadata)),parent]}
+    result=recover_cloud_materials(PAPER,copy.deepcopy(bundle))['records'][-1]
+    assert result['status']=='accessible' and result['cloud_checksum']['verified']
+    assert result['level']=='response_sample' and result['columns']==[]
+    assert result['body_sample_b64']==parent['body_sample_b64'] and result['text']==''
+    assert result['prior_classification']['status']=='fetch_error'
+    altered=copy.deepcopy(bundle);altered['records'][-1]['complete_body']=False
+    assert recover_cloud_materials(PAPER,altered)['records'][-1]['status']=='fetch_error'
+
+
 def test_bad_checksum_never_becomes_structured_data():
     result=collect_cloud(PAPER,Requests(bad_checksum=True),[])
     file=next(e for e in result['records'] if e['kind']=='file')

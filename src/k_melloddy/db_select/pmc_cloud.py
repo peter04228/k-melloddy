@@ -15,7 +15,7 @@ from .revalidation_access import readable_body
 BASE='https://pmc-oa-opendata.s3.amazonaws.com/'
 HOST='pmc-oa-opendata.s3.amazonaws.com'
 NS={'s':'http://s3.amazonaws.com/doc/2006-03-01/'}
-MATERIALS=('.zip','.csv','.tsv','.txt','.xls','.xlsx','.json','.xml','.docx','.h5','.h5ad','.pdf')
+MATERIALS=('.zip','.csv','.tsv','.txt','.xls','.xlsx','.json','.xml','.doc','.docx','.h5','.h5ad','.pdf')
 
 
 def _xml(text):
