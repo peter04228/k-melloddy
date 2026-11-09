@@ -31,6 +31,37 @@ def test_unknown_is_not_claimed_absent_or_downloadable():
     assert '검증 미수행' in cells[2] and '존재하지 않음' not in cells[2]
 
 
+@pytest.mark.parametrize('status,url',[
+    ('verified_public','https://repository.test/observed-record'),
+    ('restricted',None),('not_public',None),
+])
+def test_later_explicit_access_finding_supersedes_only_pathless_unknown_in_excel(status,url):
+    initial=fact(public_status='unknown',verification_level='mentioned')
+    later=fact(name='geo',public_status=status,url=url)
+    record={'final':{'status':'pending','code':'P03','reason':'fixture'},'data_observations':[initial,later]}
+    before=copy.deepcopy(record)
+    cells=screening_data_cells(record)
+    assert '공개 여부 미확인' not in cells[2]
+    assert ('공개 접근 확인' if status=='verified_public' else '접근 제한 확인' if status=='restricted' else '비공개 명시') in cells[2]
+    assert cells[3]==(url or '미확인') and record==before
+    # No source-history entries are removed, and final outcome/column count stay intact.
+    paper={'paper_id':'Liver-00001','pmid':'123','values':{'Title':'fixture','Abstract':'fixture'}}
+    assert len(paper_row(paper,record))==16 and record['data_observations']==[initial,later]
+
+
+def test_display_supersession_does_not_merge_distinct_relationships_urls_or_unverified_claims():
+    initial=fact(public_status='unknown',verification_level='mentioned')
+    for later in [fact(),fact(relationship='new',public_status='verified_public')]:
+        cells=screening_data_cells({'data_observations':[initial,later]})
+        assert '공개 여부 미확인' in cells[2]
+    known=fact(public_status='unknown',verification_level='landing_page',url='https://repository.test/access-terms')
+    other=fact(public_status='verified_public',url='https://repository.test/data')
+    cells=screening_data_cells({'data_observations':[known,other]})
+    assert known['url'] in cells[3] and other['url'] in cells[3] and '공개 여부 미확인' in cells[2]
+    # A newer unknown is not silently replaced by an older access finding.
+    assert '공개 여부 미확인' in screening_data_cells({'data_observations':[other,initial]})[2]
+
+
 @pytest.mark.parametrize('fault',['invented_name','invented_url','article_url','overstated_download'])
 def test_unsupported_observations_are_rejected(fault):
     p={'values':{'Title':'Study','Abstract':'Public GEO data were reused.'}};f=fact();e=evidence_record('ft',text='GEO data',url='https://publisher.test/article')

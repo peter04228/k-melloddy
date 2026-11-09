@@ -68,7 +68,17 @@ def source_observations(proposal,evidence):
 
 def screening_data_cells(record):
     """J/K/L/M, without a final-status gate or invented download paths."""
-    facts=record.get('data_observations',[]);datasets=record.get('datasets',[]);sources=record.get('source_databases',[])
+    # Retain the complete observation history in JSON. For display only, a
+    # later explicit access finding supersedes an earlier pathless unknown.
+    facts=[];resolved=set()
+    for fact in reversed(record.get('data_observations',[])):
+        key=(fact['name'].casefold(),fact['relationship'])
+        if (key in resolved and fact['public_status']=='unknown' and not fact.get('url')
+                and fact['verification_level'] in {'mentioned','unverified'}):continue
+        facts.append(fact)
+        if fact['public_status'] in {'verified_public','restricted','not_public'}:resolved.add(key)
+    facts.reverse()
+    datasets=record.get('datasets',[]);sources=record.get('source_databases',[])
     names=[d['name'] for d in datasets]+[s['name'] for s in sources]+[f['name'] for f in facts]
     relations=[d['independence_reason'] for d in datasets]+(['기존 DB 재사용'] if sources else [])+[RELATIONS[f['relationship']] for f in facts]
     levels=[LEVELS[d['verification_level']] for d in datasets]
