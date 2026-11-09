@@ -72,6 +72,10 @@ class SessionProvider(SubmittedReviewProvider):
         answer = self.response(paper, policy, bundle)
         bundle = copy.deepcopy(bundle)
         review = answer.get('evidence_review', {})
+        if review.get('manuscript_identity_bindings'):
+            from .manuscript_binding import bind_manuscripts
+            bundle=bind_manuscripts(paper,bundle,review['manuscript_identity_bindings'])
+            validate_evidence(bundle)
         if review.get('pdf_grid_selections'):
             from .pdf_grid_review import selected_pdf_grids
             bundle=selected_pdf_grids(bundle,review['pdf_grid_selections'])
