@@ -49,6 +49,17 @@ def _check_bytes(row,expected):
     return raw
 
 
+def _legacy_doc_observation(row):
+    """Citable access metadata for opaque DOC bytes, never document contents."""
+    if (urlsplit(row['url']).path.lower().endswith('.doc')
+            and row.get('status')=='accessible' and not row.get('text')):
+        row['text']=json.dumps({'observed_file':unquote(urlsplit(row['url']).path.rsplit('/',1)[-1]),
+                               'bytes_observed':row['bytes_observed'],
+                               'official_md5':row['cloud_checksum'],
+                               'document_contents_inspected':False},sort_keys=True)
+        row['interpretation_note']='Verified file-access metadata only; opaque legacy DOC contents and table structure are unverified.'
+
+
 def _article_xml(paper,row,raw):
     if row.get('status')=='access_restricted':return
     try:
@@ -126,6 +137,7 @@ def recover_cloud_materials(paper,bundle):
                 if len(archive.infolist())>1000 or sum(x.file_size for x in archive.infolist())>32*1024*1024:
                     row.update(status='fetch_error',failure_reason='PMC_cloud_archive_expansion_limit');continue
         inspect_material(row)
+        _legacy_doc_observation(row)
     return bundle
 
 
@@ -215,6 +227,7 @@ def collect_cloud(paper,request,prior_records,max_versions=2,max_materials=3):
                         row['prior_classification']={k:row.get(k) for k in ['status','failure_reason']}
                         row.update(status='accessible',failure_reason='',level='response_sample',detected_format='application/zip')
                     inspect_material(row)
+                    _legacy_doc_observation(row)
                 remaining-=1
         coverage['state']='investigated' if matches else 'no_verified_version'
     except (ValueError,TypeError,KeyError,ET.ParseError,zipfile.BadZipFile) as exc:

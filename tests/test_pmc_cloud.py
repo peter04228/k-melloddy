@@ -73,7 +73,10 @@ def test_listed_legacy_doc_is_accessible_bytes_without_claiming_structure():
     result=recover_cloud_materials(PAPER,copy.deepcopy(bundle))['records'][-1]
     assert result['status']=='accessible' and result['cloud_checksum']['verified']
     assert result['level']=='response_sample' and result['columns']==[]
-    assert result['body_sample_b64']==parent['body_sample_b64'] and result['text']==''
+    assert result['body_sample_b64']==parent['body_sample_b64']
+    observation=json.loads(result['text'])
+    assert observation['observed_file']=='supplement.doc' and observation['document_contents_inspected'] is False
+    assert observation['bytes_observed']==len(raw)
     assert result['prior_classification']['status']=='fetch_error'
     altered=copy.deepcopy(bundle);altered['records'][-1]['complete_body']=False
     assert recover_cloud_materials(PAPER,altered)['records'][-1]['status']=='fetch_error'
