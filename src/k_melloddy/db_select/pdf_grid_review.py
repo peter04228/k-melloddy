@@ -20,6 +20,11 @@ def selected_pdf_grids(bundle, selections):
             tables=document[page].find_tables().tables
             if type(table)!=int or not 0<=table<len(tables):raise ValueError('PDF table index')
             grid=tables[table].extract()
+            start=selection['data_row_start']
+            if type(start)!=int or not 0<=start<len(grid):raise ValueError('PDF data row start')
+            top=max((t.bbox[3] for i,t in enumerate(tables) if i!=table and t.bbox[3]<=tables[table].bbox[1]),default=0)
+            bottom=tables[table].rows[start].bbox[1]
+            caption_region=document[page].get_text(clip=fitz.Rect(0,top,document[page].rect.width,bottom))
         if not grid or len(grid)>5000 or max(map(len,grid))>100:raise ValueError('PDF grid size limit')
         header_cells=selection['header_cells'];columns=[];indexes=[]
         for row,col in header_cells:
@@ -39,12 +44,16 @@ def selected_pdf_grids(bundle, selections):
             rows.append([row[i].strip() for i in indexes])
         caption=selection['caption_quote']
         if not caption or caption not in parent['text']:raise ValueError('Unobserved PDF caption')
+        normalize=lambda text:' '.join(text.split()).casefold()
+        if normalize(caption) not in normalize(caption_region):
+            raise ValueError('Caption is not above the selected PDF table data')
         e=copy.deepcopy(parent)
         e.update(evidence_id='pdf-grid-'+digest(dump(selection).encode())[:24],
                  parent_evidence_id=parent['evidence_id'],level='sample_structure',columns=columns,
                  pdf_grid_selection=copy.deepcopy(selection),pdf_grid_rows=rows,
                  text=caption+'\n'+json.dumps({'columns':columns,'rows':rows},ensure_ascii=False),
-                 document_text=parent['text'],request_performed=False,transport='pdf_grid_cells',
+                 document_text=caption+'\n'+' '.join(columns)+'\n'+json.dumps(rows,ensure_ascii=False),
+                 request_performed=False,transport='pdf_grid_cells',
                  downloaded_full_dataset=False,
                  interpretation_note='Explicit PDF cells only; original units, NA and significance marks retained. No synthetic drug column or clinical toxicity label.')
         if not any(old['evidence_id']==e['evidence_id'] for old in result['records']):result['records'].append(e)

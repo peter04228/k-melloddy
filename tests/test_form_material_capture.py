@@ -100,3 +100,21 @@ def test_archive_traversal_is_rejected_before_extraction(tmp_path):
     paper,bundle,capture=sample(tmp_path)
     capture['pdf_members']=[{'name':'../outside.pdf','archive_path':'missing.rar','sha256':'x'}]
     with pytest.raises(ValueError,match='Unsafe'):append(tmp_path,paper,bundle,capture)
+
+
+def test_caption_from_another_page_cannot_assign_its_drug_to_selected_table(tmp_path):
+    fitz=pytest.importorskip('fitz')
+    first=fitz.open(stream=grid_pdf(),filetype='pdf')
+    second=fitz.open(stream=grid_pdf(),filetype='pdf')
+    second[0].add_redact_annot(fitz.Rect(40,20,450,50));second[0].apply_redactions()
+    second[0].insert_text((50,40),'Another compound Human in vitro 8hr')
+    first.insert_pdf(second);pdf=first.tobytes()
+    from pypdf import PdfReader
+    text='\n'.join(p.extract_text() or '' for p in PdfReader(io.BytesIO(pdf)).pages)
+    material=dict(evidence_id='pdf',kind='file',status='accessible',http_status=200,
+        complete_body=True,bytes_observed=len(pdf),payload_sha256=digest(pdf),
+        body_sample_b64=base64.b64encode(pdf).decode(),text=text)
+    selection=dict(parent_evidence_id='pdf',page=1,table=0,header_cells=[[0,0],[0,1],[0,2]],
+        expected_columns=['Pathways','Both','Up'],data_row_start=1,data_row_end=3,
+        caption_quote='Dexamethasone Human in vitro 8hr')
+    with pytest.raises(ValueError,match='not above'):selected_pdf_grids({'records':[material]},[selection])
