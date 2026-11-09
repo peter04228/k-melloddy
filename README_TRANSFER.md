@@ -161,6 +161,8 @@ py -3.13 -m venv .venv
 
 현재 확인된 주요 Python 버전은 PyYAML 6.0.3, openpyxl 3.1.5, xlrd 2.0.2, pytest 8.4.2, pypdf 6.14.2입니다. PDF 읽기 의존성 pypdf를 `pyproject.toml`에 포함했고 `requirements.txt`·`requirements-dev.txt`·`constraints.txt`로 설치하도록 정리했습니다. 주요 패키지 버전 제한이며 전체 전이 의존성 잠금 파일은 아닙니다. 새 PC 설치 검증은 별도로 필요합니다.
 
+공개 보충자료의 PDF 표 셀을 명시적으로 검수하려면 추가로 `.\.venv\Scripts\python.exe -m pip install -c constraints.txt -e ".[review]"`를 실행합니다. 현재 검증된 선택 의존성은 PyMuPDF 1.27.2.3입니다. `public_form_captures`는 실제 공개 다운로드 양식의 응답을 출처·해시와 연결하여 보존하며 자동 로그인이나 양식 제출을 수행하지 않습니다. RAR 안의 선택한 PDF를 다시 검사하는 경우 RAR을 읽을 수 있는 `tar`/bsdtar가 필요합니다(현재 Windows 시스템 tar로 검증). 도구가 없거나 파일이 달라지면 미완료 검수를 멈추며 내용을 추정하지 않습니다. 확정된 이전 SQLite 기록은 이 기능 때문에 다시 판정하지 않습니다. 상세 계약은 `src/k_melloddy/db_select/form_material_capture.README.md`와 `pdf_grid_review.README.md`를 따릅니다.
+
 Excel 생성은 Python 패키지만으로 되지 않습니다. Node.js와 `@oai/artifact-tool` 런타임이 필요합니다. 현재 코드의 기본 탐색 위치는 사용자 홈 아래 다음 경로입니다.
 
 ```text
