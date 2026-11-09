@@ -22,6 +22,33 @@ XML='''<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2
 </w:body></w:document>'''
 
 
+def test_selected_docx_inside_zip_preserves_captured_parent_and_hashes():
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    docx=base64.b64decode(record(XML)['body_sample_b64'])
+    stream=io.BytesIO()
+    with zipfile.ZipFile(stream,'w') as z:z.writestr('supplement/Table S1.docx',docx)
+    raw=stream.getvalue()
+    parent=dict(evidence_id='zip',kind='file',status='accessible',complete_body=True,
+                http_status=200,url='https://example.org/supp.zip',final_url='https://example.org/supp.zip',
+                body_sample_b64=base64.b64encode(raw).decode(),payload_sha256=digest(raw),
+                cloud_checksum={'verified':True})
+    selection=dict(parent_evidence_id='zip',members=['supplement/Table S1.docx'],table_index=0)
+    bundle={'records':[parent]}
+    result=selected_docx_tables(bundle,[selection]);derived=result['records'][1]
+    assert result['records'][0]==parent and len(bundle['records'])==1
+    assert derived['columns']==['case','ALT'] and derived['request_performed'] is False
+    assert derived['url']==parent['url'] and derived['payload_sha256']==digest(docx)
+    assert base64.b64decode(derived['body_sample_b64'])==docx
+    assert derived['archive_members'][0]['member']=='supplement/Table S1.docx'
+    assert len(selected_docx_tables(result,[selection])['records'])==2
+    parent['cloud_checksum']['verified']=False
+    with pytest.raises(ValueError,match='checksum failed'):selected_docx_tables(bundle,[selection])
+    parent['cloud_checksum']['verified']=True
+    selection['members']=['missing.docx']
+    with pytest.raises(ValueError,match='Missing'):selected_docx_tables(bundle,[selection])
+
+
 def test_direct_supplementary_docx_is_inspected_as_file():
     e=record(XML);e.update(kind='supplementary',status='accessible')
     original=e['body_sample_b64']

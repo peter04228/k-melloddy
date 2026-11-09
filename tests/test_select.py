@@ -274,13 +274,13 @@ def test_dataset_url_identity_is_case_sensitive():
 def test_sqlite_commit_before_cumulative_json_failure(tmp_path):
     c,m=setup(tmp_path,{'1':scenario()})
     from k_melloddy.db_select import persistence
-    original=persistence.atomic_replace
+    original=persistence.atomic_json
     def fail(path,*args):
         if Path(path).name=='evidence_log.json' and c.store.db.execute('SELECT COUNT(*) FROM revisions').fetchone()[0]:
             raise KeyboardInterrupt
         return original(path,*args)
     try:
-        with patch.object(persistence,'atomic_replace',side_effect=fail):
+        with patch.object(persistence,'atomic_json',side_effect=fail):
             with pytest.raises(KeyboardInterrupt):c.run(m,export=False)
         run=c.run_id
         assert len(c.store.records(run))==1

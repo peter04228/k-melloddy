@@ -17,6 +17,20 @@ def selected_docx_tables(bundle, selections):
             raise ValueError('DOCX selection requires complete accessible file')
         data=base64.b64decode(parent['body_sample_b64'],validate=True)
         if digest(data)!=parent['payload_sha256'] or len(data)>16*1024*1024:raise ValueError('DOCX payload changed or oversized')
+        if parent.get('cloud_checksum',{}).get('verified') is False:
+            raise ValueError('DOCX selection rejected: official cloud checksum failed')
+        members=selection.get('members',[])
+        if not isinstance(members,list) or len(members)>3:raise ValueError('DOCX archive depth exceeds limit')
+        chain=[]
+        for name in members:
+            if not isinstance(name,str) or not name:raise ValueError('Invalid DOCX archive member')
+            with zipfile.ZipFile(io.BytesIO(data)) as outer:
+                if len(outer.infolist())>1000:raise ValueError('DOCX archive member limit')
+                matches=[m for m in outer.infolist() if m.filename==name]
+                if len(matches)!=1 or matches[0].is_dir() or matches[0].file_size>16*1024*1024:
+                    raise ValueError('Missing, duplicate or oversized DOCX archive member')
+                data=outer.read(matches[0])
+            chain.append(dict(member=name,sha256=digest(data),bytes=len(data)))
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             member=archive.getinfo('word/document.xml')
             if member.file_size>8*1024*1024:raise ValueError('DOCX expansion limit')
@@ -41,6 +55,10 @@ def selected_docx_tables(bundle, selections):
             transport='document_table',columns=rows[0],level='sample_structure',
             text=dump({'selection':selection,'sample':rows[:6]}),downloaded_full_dataset=False,
             interpretation_note='Selected table from captured DOCX; parent URL/HTTP metadata retained; no new request or inferred columns')
+        if members:
+            record.update(archive_members=chain,format='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                          body_sample_b64=base64.b64encode(data).decode(),payload_sha256=digest(data),bytes_observed=len(data),
+                          interpretation_note='Selected DOCX table inside captured archive; parent URL/HTTP metadata and archive checksum refer to original request; no new request or inferred columns')
         if not any(e['evidence_id']==record['evidence_id'] for e in result['records']):result['records'].append(record)
     return result
 

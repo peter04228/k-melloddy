@@ -250,3 +250,10 @@ Validation/retries/resume/commands/tests/limitations: see src/k_melloddy/db_sele
 
 
 2026-11-09 보충 PDF 검수 보완: 실제 완전한 PDF의 바이트 길이·SHA256·공식 체크섬을 확인한 뒤 제한된 텍스트만 추출합니다. 파일 8 MiB·64쪽·250,000자 제한이며 원본 바이트와 접근 이력은 보존합니다. 텍스트 추출만으로 표 열·자료 건수·독립 재사용성 또는 확정을 추정하지 않습니다. 재개 시 미완료 자료만 새 검수 요청에 연결하며 기존 확정 판정은 바꾸지 않습니다. 상세 계약과 명령·상태·재시도·한계는 src/k_melloddy/db_select/full_workflow_access.README.md, 검증은 tests/test_pdf_material.py를 참조합니다. 관련 오프라인 회귀 56개 테스트가 통과했습니다.
+## 실제 파일 검증 보완 (2026-11-09)
+
+ZIP 안의 DOCX도 정확한 멤버 이름과 표 번호를 지정하여 이미 확보한 바이트에서 검증할 수 있습니다. 원본 ZIP·공식 체크섬·내부 파일 해시·선택한 표·파생 증거 ID를 함께 보존합니다. 병합 셀·불명확한 헤더는 임의로 정리하지 않으며, 표본 구조 확인만으로 자료 전체 다운로드나 확정을 선언하지 않습니다.
+
+단일 약물 임상표에서 약물명이 파일 자체의 표 제목에만 명시된 경우에는 `drug_identifier: constant:약물명`으로 관찰된 문맥을 명시할 수 있습니다. 같은 실제 파일의 제목 인용이 필요하며, endpoint와 값은 실제 열이어야 합니다. 환자번호를 약물 식별자로 사용하거나 원본에 가상 열을 추가하지 않습니다. 기존 JSON·Excel 열 구성과 정책 파일은 변경하지 않습니다. 검증 실패는 적절한 보류·재검증 대상으로 유지하고 기존 판정은 자동 변경하지 않습니다.
+
+관련 코드·한계·재개·테스트: `src/k_melloddy/db_select/archive_review.README.md`, `src/k_melloddy/db_select/dataset_verifier.README.md`. 회귀 검증: `python -m pytest tests/test_constant_drug_caption.py tests/test_docx_material.py tests/test_archive_review.py tests/test_select.py tests/test_verified_select.py tests/test_projection_streaming.py -q` — 84개 통과. 과거 중단 테스트의 오류 주입 대상도 실제 누적 JSON 작성 함수인 `atomic_json`에 맞췄습니다.

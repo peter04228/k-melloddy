@@ -38,8 +38,19 @@ def verify_dataset(dataset,evidence):
         raise ValueError('Direct download path was not observed by collector')
     if e['level'] not in {'sample_structure','metadata_structure','full_file'}:
         raise ValueError('Link response alone does not verify data structure')
-    if not {dataset['drug_identifier'],dataset['endpoint'],dataset['value_field']}<=set(e['columns']):
+    if not {dataset['endpoint'],dataset['value_field']}<=set(e['columns']):
         raise ValueError('Drug/endpoint/value fields not verified in sample or official metadata')
+    identifier=dataset['drug_identifier']
+    if identifier not in e['columns']:
+        # A single-agent table may name its exposure in its own captured caption.
+        value=identifier.removeprefix('constant:').strip() if identifier.startswith('constant:') else ''
+        document=e.get('document_text','')
+        header=e['columns'][0] if e['columns'] else ''
+        caption=document.split(header,1)[0] if header and header in document else ''
+        refs=[ref for ref in dataset['evidence_refs'] if ref['evidence_id']==e['evidence_id']]
+        if (not value or not caption or value.casefold() not in caption.casefold()
+                or not any(ref['quote'] in caption and value.casefold() in ref['quote'].casefold() for ref in refs)):
+            raise ValueError('Drug/endpoint/value fields not verified: drug identity needs an observed column or cited constant in this file caption')
     if not dataset['independence_reason'].strip(): raise ValueError('Missing independent registration rationale')
     # Counts can be claimed only when they are actually observed by the collector.
     for key in ['feature_count','compound_count']:
