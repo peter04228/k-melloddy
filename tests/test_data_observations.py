@@ -57,6 +57,21 @@ def test_legacy_article_source_url_is_not_a_data_link():
     assert screening_data_cells(r)[3]=='미확인'
 
 
+@pytest.mark.parametrize('status',['restricted','not_public','unknown'])
+def test_explicit_access_review_is_not_overruled_by_public_source_page(status):
+    e=evidence_record('repo','repository',text='GEO record; access terms',url='https://repository.test/access')
+    f=fact(public_status=status,verification_level='landing_page',url=e['url'],
+        evidence_refs=[{'evidence_id':'repo','quote':'GEO record'}])
+    proposal={'data_observations':[f],'source_databases':[{
+        'name':'geo','url':e['url'],'evidence_refs':f['evidence_refs']}]}
+    before=copy.deepcopy(proposal)
+    assert source_observations(proposal,{'records':[e]})==[]
+    assert proposal==before
+    cells=screening_data_cells({'data_observations':[f],
+        'source_databases':proposal['source_databases'],'final':{'status':'excluded','code':'E07'}})
+    assert '공개 접근 확인' not in cells[2] and cells[3]==e['url']
+
+
 def test_enrichment_preserves_decision_and_is_idempotent(tmp_path):
     project,m=make_demo_input(tmp_path,'Enrich',1)
     class Verifier:

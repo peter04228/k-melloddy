@@ -48,7 +48,11 @@ def observation_evidence(store,run,paper):
 def source_observations(proposal,evidence):
     """Promote already cited source DB facts; never promote article/search URLs."""
     result=[]
+    explicit_names={fact['name'].casefold() for fact in proposal.get('data_observations',[])}
     for source in proposal.get('source_databases',[]):
+        # An accessible information page must not append an inferred public
+        # status over a reviewer's explicitly verified access restriction.
+        if source['name'].casefold() in explicit_names:continue
         cited={r['evidence_id'] for r in source['evidence_refs']}
         material=[e for e in evidence['records'] if e['evidence_id'] in cited and e['status']=='accessible'
             and e['kind'] in {'repository','landing','supplementary','file','api'} and source['url'] in {e['url'],e['final_url']}]
