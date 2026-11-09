@@ -23,7 +23,7 @@ Excel 생성에는 별도로 Node.js와 `@oai/artifact-tool`을 제공하는 런
 
 ## 현재 110편 검수 상태 가져오기
 
-코드 clone만으로 연구 데이터가 내려오지는 않습니다. **현재 연구 데이터 릴리스는 업로드 승인 대기 상태입니다.** 게시 후 [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `checkpoint_download.json`과 `k-melloddy-liver-15860-checkpoint-20261109.zip.part001`~`.part005`를 모두 받습니다. 비공개 릴리스이므로 저장소 접근 권한이 필요합니다. 전체 압축본은 약 2.24GB이며 압축 해제 전 조각을 다시 결합합니다.
+코드 clone만으로 연구 데이터가 내려오지는 않습니다. [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `checkpoint_download.json`과 `k-melloddy-liver-15860-checkpoint-20261109.zip.part001`~`.part005`를 모두 받습니다. 비공개 릴리스이므로 저장소 접근 권한이 필요합니다. 전체 압축본은 약 2.24GB이며 압축 해제 전 조각을 다시 결합합니다.
 
 아래 명령은 ZIP을 현재 사용자의 Downloads 폴더에 받았다고 가정합니다.
 
