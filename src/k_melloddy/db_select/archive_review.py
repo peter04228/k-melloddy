@@ -92,7 +92,21 @@ def selected_tables(bundle, selections):
         from openpyxl import load_workbook
         row_number=selection['header_row']
         if type(row_number)!=int or not 1<=row_number<=20:raise ValueError('Invalid header row')
-        if data.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'):
+        if members and members[-1].casefold().endswith('.csv'):
+            import csv
+            import itertools
+            if selection.get('sheet') is not None:
+                raise ValueError('CSV selection has no worksheet')
+            try:
+                reader=csv.reader(io.StringIO(data.decode('utf-8-sig')),strict=True)
+                rows=list(itertools.islice(reader,row_number-1,row_number+100))
+            except (UnicodeError,csv.Error) as exc:
+                raise ValueError('Unreadable archive UTF-8 CSV') from exc
+            if (len(rows)<2 or not 1<=len(rows[0])<=256
+                    or any(len(row)!=len(rows[0]) for row in rows)):
+                raise ValueError('Missing or inconsistent CSV columns')
+            file_format='text/csv'
+        elif data.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'):
             import xlrd
             try:book=xlrd.open_workbook(file_contents=data,on_demand=True)
             except xlrd.biffh.XLRDError as exc:raise ValueError('Unreadable archive XLS: '+str(exc)) from exc

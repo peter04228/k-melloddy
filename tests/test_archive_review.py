@@ -93,3 +93,41 @@ def test_legacy_xls_archive_requires_explicit_headers_and_sheet(monkeypatch):
     assert parent['status']=='fetch_error'  # Preserve captured classification and bytes.
     with pytest.raises(ValueError):selected_tables(bundle,[dict(selection,header_row=1)])
     with pytest.raises(ValueError):selected_tables(bundle,[dict(selection,sheet='Unknown')])
+
+
+def csv_sample(content):
+    outer=io.BytesIO()
+    with zipfile.ZipFile(outer,'w') as z:z.writestr('Supplement/Table.csv',content)
+    raw=outer.getvalue()
+    parent=dict(evidence_id='parent',kind='file',complete_body=True,http_status=200,
+        status='fetch_error',body_sample_b64=base64.b64encode(raw).decode(),payload_sha256=digest(raw))
+    selection=dict(parent_evidence_id='parent',members=['Supplement/Table.csv'],sheet=None,header_row=1)
+    return {'records':[parent]},selection
+
+
+def test_archive_csv_preserves_actual_quoted_headers_values_and_hash():
+    content=b'\xef\xbb\xbfDrug,"DILI, label"\r\n"synthetic, A",positive\r\n'
+    bundle,selection=csv_sample(content)
+    result=selected_tables(bundle,[selection]);e=result['records'][-1]
+    assert result['records'][0]==bundle['records'][0] and len(bundle['records'])==1
+    assert e['format']=='text/csv' and e['columns']==['Drug','DILI, label']
+    assert 'synthetic, A' in e['text'] and e['payload_sha256']==digest(content)
+    assert e['request_performed'] is False and e['downloaded_full_dataset'] is False
+    assert len(selected_tables(result,[selection])['records'])==2
+
+
+@pytest.mark.parametrize('content',[
+    b'Drug,DILI\na,1,extra\n', b'Drug,Drug\na,1\n', b',DILI\na,1\n',
+    b'Drug,DILI\na,=SUM(1)\n', b'Drug,DILI\n"unclosed,1\n', b'Drug,DILI\n\xff,1\n',
+])
+def test_archive_csv_rejects_ambiguous_or_unsafe_table(content):
+    bundle,selection=csv_sample(content)
+    with pytest.raises(ValueError):selected_tables(bundle,[selection])
+
+
+def test_archive_csv_requires_explicit_header_and_no_worksheet():
+    bundle,selection=csv_sample(b'Caption\nDrug,DILI\na,1\n')
+    with pytest.raises(ValueError):selected_tables(bundle,[selection])
+    selection['header_row']=2
+    assert selected_tables(bundle,[selection])['records'][-1]['columns']==['Drug','DILI']
+    with pytest.raises(ValueError):selected_tables(bundle,[dict(selection,sheet='Invented')])
