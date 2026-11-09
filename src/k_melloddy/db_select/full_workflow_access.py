@@ -12,7 +12,7 @@ import urllib.error
 import http.client
 from html.parser import HTMLParser
 import xml.etree.ElementTree as ET
-from urllib.parse import urlsplit,quote
+from urllib.parse import urlsplit,quote,urljoin
 
 from ..core.storage import digest, dump, now
 from .revalidation_access import RevalidationAccess
@@ -62,6 +62,48 @@ def recover_typographic_identity(paper, record):
                       identity_recovery='typographic_title_and_verified_DOI',
                       prior_classification={'status':'fetch_error','failure_reason':'article_identity_not_verified'})
         record.setdefault('identity_checks',{}).update(title=True,doi=True)
+    else:
+        recover_pmc_table_identity(paper,record)
+    return record
+
+
+def recover_pmc_table_identity(paper,record):
+    """Bind an official standalone PMC table using its captured article metadata."""
+    if (record.get('kind')!='fulltext' or record.get('status')!='fetch_error'
+            or record.get('failure_reason')!='article_identity_not_verified'
+            or record.get('http_status')!=200 or not record.get('complete_body')):return record
+    values=paper['values'];pmcid=values.get('PMCID','');doi=values.get('DOI','')
+    if not re.fullmatch(r'PMC[0-9]+',pmcid) or not doi or not values.get('Title'):return record
+    parent='https://pmc.ncbi.nlm.nih.gov/articles/'+pmcid+'/'
+    urls=[urlsplit(record.get(k,'')) for k in ['url','final_url']]
+    if any(u.scheme!='https' or u.netloc!='pmc.ncbi.nlm.nih.gov' or u.query or u.fragment
+           or not re.fullmatch('/articles/'+pmcid+r'/table/[A-Za-z0-9_-]+/',u.path) for u in urls):return record
+    if urls[0]!=urls[1]:return record
+    class Metadata(HTMLParser):
+        def __init__(self):super().__init__();self.fields={};self.links=[]
+        def handle_starttag(self,tag,attrs):
+            a=dict(attrs)
+            if tag=='meta':self.fields.setdefault(a.get('property',a.get('name','')),[]).append(a.get('content',''))
+            if tag=='a':self.links.append(a.get('href',''))
+    try:
+        raw=base64.b64decode(record.get('body_sample_b64',''),validate=True)
+        if (not raw or len(raw)>8*1024*1024 or len(raw)!=record.get('bytes_observed')
+                or digest(raw)!=record.get('payload_sha256')):return record
+        meta=Metadata();meta.feed(raw.decode('utf-8-sig'));meta.close()
+    except (ValueError,UnicodeError):return record
+    norm=lambda s:' '.join(re.findall(r'\w+',unicodedata.normalize('NFKC',s).casefold()))
+    expected=norm(values['Title']);titles=meta.fields.get('og:title',[])
+    # PMC may prefix the same official title with the article "The".
+    if len(titles)!=1 or norm(titles[0]) not in {expected,'the '+expected}:return record
+    if meta.fields.get('og:url')!=[parent] or parent not in [urljoin(record['url'],u) for u in meta.links]:return record
+    doi_links=[u for u in meta.links if urlsplit(u).netloc=='doi.org']
+    if len(doi_links)!=1 or doi_links[0].casefold()!='https://doi.org/'+doi.casefold():return record
+    record.update(status='accessible',failure_reason='',identity_match=True,level='response_sample',
+                  identity_recovery='official_PMC_table_metadata_and_verified_DOI',
+                  prior_classification={'status':'fetch_error','failure_reason':'article_identity_not_verified'},
+                  table_article_metadata={'pmcid':pmcid,'title':titles[0],'doi_url':doi_links[0],
+                                          'article_url':parent,'scope':'standalone table; not full article review'})
+    record.setdefault('identity_checks',{}).update(title=True,doi=True,pmcid=True)
     return record
 
 
