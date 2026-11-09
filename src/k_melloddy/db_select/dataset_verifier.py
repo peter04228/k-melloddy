@@ -50,7 +50,13 @@ def verify_dataset(dataset,evidence):
         refs=[ref for ref in dataset['evidence_refs'] if ref['evidence_id']==e['evidence_id']]
         if (not value or not caption or value.casefold() not in caption.casefold()
                 or not any(ref['quote'] in caption and value.casefold() in ref['quote'].casefold() for ref in refs)):
-            raise ValueError('Drug/endpoint/value fields not verified: drug identity needs an observed column or cited constant in this file caption')
+            matches=[x for x in evidence.get('single_agent_contexts',[])
+                     if x.get('evidence_id')==e['evidence_id'] and x.get('drug_identifier')==identifier]
+            if len(matches)!=1 or set(matches[0])!={'evidence_id','drug_identifier','context'}:
+                raise ValueError('Drug/endpoint/value fields not verified: drug identity needs an observed column or cited constant in this file caption')
+            from .dataset_context import verify_single_agent_context
+            declared=dict(dataset,drug_context=matches[0]['context'])
+            dataset=dict(dataset,drug_context=verify_single_agent_context(declared,evidence,e))
     if not dataset['independence_reason'].strip(): raise ValueError('Missing independent registration rationale')
     # Counts can be claimed only when they are actually observed by the collector.
     for key in ['feature_count','compound_count']:

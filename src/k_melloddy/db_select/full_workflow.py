@@ -87,6 +87,13 @@ class SessionProvider(SubmittedReviewProvider):
             from .archive_review import selected_docx_tables
             bundle=selected_docx_tables(bundle,review['docx_selections'])
             validate_evidence(bundle)
+        if review.get('single_agent_contexts'):
+            # Reviewer selections stay outside the frozen LLM proposal schema.
+            # They confer no structure/identity until verify_dataset checks them.
+            contexts=review['single_agent_contexts']
+            if not isinstance(contexts,list) or any(not isinstance(x,dict) for x in contexts):
+                raise ValueError('Invalid explicit single-agent context selections')
+            bundle['single_agent_contexts']=copy.deepcopy(contexts)
         lookup = {e['evidence_id']: e for e in bundle['records']}
         for item in review.get('sections', []):
             citations([item['reference']], bundle)
