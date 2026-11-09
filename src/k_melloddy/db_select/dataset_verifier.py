@@ -40,6 +40,13 @@ def verify_dataset(dataset,evidence):
         raise ValueError('Link response alone does not verify data structure')
     if not {dataset['endpoint'],dataset['value_field']}<=set(e['columns']):
         raise ValueError('Drug/endpoint/value fields not verified in sample or official metadata')
+    contexts=[x for x in evidence.get('column_memberships',[]) if x.get('evidence_id')==e['evidence_id']]
+    membership_declared=(contexts or dataset.get('membership_context') or
+        (evidence.get('column_memberships') and len({dataset[k] for k in ['drug_identifier','endpoint','value_field']})==1))
+    if membership_declared:
+        if len(contexts)!=1:raise ValueError('One-column membership requires explicit exposure metadata verification')
+        from .membership_context import verify_membership_context
+        dataset=dict(dataset,membership_context=verify_membership_context(dataset,evidence,e,contexts[0]['context']))
     identifier=dataset['drug_identifier']
     if identifier not in e['columns']:
         # A single-agent table may name its exposure in its own captured caption.

@@ -102,6 +102,11 @@ class SessionProvider(SubmittedReviewProvider):
             if not isinstance(contexts,list) or any(not isinstance(x,dict) for x in contexts):
                 raise ValueError('Invalid explicit single-agent context selections')
             bundle['single_agent_contexts']=copy.deepcopy(contexts)
+        if review.get('column_memberships'):
+            contexts=review['column_memberships']
+            if not isinstance(contexts,list) or any(not isinstance(x,dict) for x in contexts):
+                raise ValueError('Invalid explicit column membership contexts')
+            bundle['column_memberships']=copy.deepcopy(contexts)
         lookup = {e['evidence_id']: e for e in bundle['records']}
         for item in review.get('sections', []):
             citations([item['reference']], bundle)
