@@ -72,6 +72,10 @@ class SessionProvider(SubmittedReviewProvider):
         answer = self.response(paper, policy, bundle)
         bundle = copy.deepcopy(bundle)
         review = answer.get('evidence_review', {})
+        if review.get('ltkb_pdf_selections'):
+            from .archive_review import selected_ltkb_pdf_tables
+            bundle=selected_ltkb_pdf_tables(bundle,review['ltkb_pdf_selections'])
+            validate_evidence(bundle)
         if review.get('archive_selections'):
             from .archive_review import selected_tables
             bundle=selected_tables(bundle,review['archive_selections'])

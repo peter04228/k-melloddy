@@ -8,6 +8,57 @@ import xml.etree.ElementTree as ET
 from ..core.storage import digest, dump
 
 
+def selected_ltkb_pdf_tables(bundle, selections):
+    """Read an explicitly bounded four-column LTKB/area table, never infer headers."""
+    import re
+    from pypdf import PdfReader
+    result=copy.deepcopy(bundle)
+    columns=['LTKBID','LabelCompoundName','verified-DILI-Concern','Area in Fig. 4']
+    header=' '.join(columns)
+    for selection in selections:
+        parent=next(e for e in bundle['records'] if e['evidence_id']==selection['parent_evidence_id'])
+        if (parent.get('kind')!='file' or parent.get('status')!='accessible'
+                or parent.get('http_status')!=200 or not parent.get('complete_body')
+                or parent.get('cloud_checksum',{}).get('verified') is False):
+            raise ValueError('LTKB PDF table requires complete public file evidence')
+        raw=base64.b64decode(parent['body_sample_b64'],validate=True)
+        if (not raw.startswith(b'%PDF-') or len(raw)>8*1024*1024
+                or len(raw)!=parent['bytes_observed'] or digest(raw)!=parent['payload_sha256']):
+            raise ValueError('LTKB PDF payload validation failed')
+        reader=PdfReader(io.BytesIO(raw))
+        encrypted=reader.is_encrypted
+        if encrypted and not reader.decrypt(''):raise ValueError('LTKB PDF requires a user password')
+        if not 1<=len(reader.pages)<=64:raise ValueError('LTKB PDF page limit')
+        text='\n'.join(p.extract_text() or '' for p in reader.pages)
+        if len(text)>250000:raise ValueError('LTKB PDF text limit')
+        lines=[' '.join(line.split()) for line in text.splitlines() if line.strip()]
+        starts=[i for i,line in enumerate(lines) if line.startswith(selection['start_marker'])]
+        ends=[i for i,line in enumerate(lines) if line.startswith(selection['end_marker'])]
+        if len(starts)!=1 or len(ends)!=1 or not starts[0]<ends[0]:raise ValueError('Ambiguous PDF table boundaries')
+        selected=lines[starts[0]+1:ends[0]]
+        if not selected or selected[0]!=header or len(selected)>5000:raise ValueError('Unverified PDF table headers/size')
+        rows=[];identifiers=set()
+        for line in selected:
+            if line==header:continue
+            match=re.fullmatch(r'(LT[0-9]{5}) (.+?) (v(?:Most|Less|No)-DILI-Concern) ([ABCD])',line)
+            if not match:raise ValueError('Unparsed PDF table row; no rows may be silently skipped')
+            row=list(match.groups())
+            if row[0] in identifiers:raise ValueError('Duplicate PDF compound identifier')
+            identifiers.add(row[0]);rows.append(row)
+        if not rows:raise ValueError('Empty PDF table')
+        record=copy.deepcopy(parent)
+        record.update(evidence_id='pdf-ltkb-table-'+digest(dump(selection).encode())[:24],
+            parent_evidence_id=parent['evidence_id'],pdf_text_selection=selection,
+            pdf_encrypted=encrypted,pdf_opened_without_user_password=True,
+            pdf_access_permissions=int(reader.user_access_permissions) if encrypted else None,
+            request_performed=False,transport='pdf_text_table',level='sample_structure',columns=columns,
+            text=dump({'caption':lines[starts[0]],'columns':columns,'sample':rows[:5]}),
+            downloaded_full_dataset=False,
+            interpretation_note='Exact PDF table boundaries and observed headers; all bounded rows validated. No inferred assay values, label conversion or dataset counts.')
+        if not any(e['evidence_id']==record['evidence_id'] for e in result['records']):result['records'].append(record)
+    return result
+
+
 def selected_docx_tables(bundle, selections):
     """Inspect an exact table without merging unrelated tables or inventing columns."""
     result=copy.deepcopy(bundle)
