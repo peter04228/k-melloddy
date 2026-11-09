@@ -50,11 +50,19 @@ class Tables(HTMLParser):
             self.table=None;self.section=None
 
 
-def selected_html_tables(bundle,selections):
+def selected_html_tables(bundle,selections,paper=None):
     result=copy.deepcopy(bundle)
     for choice in selections:
         parent=next(e for e in bundle['records'] if e['evidence_id']==choice['parent_evidence_id'])
-        if (parent.get('kind')!='fulltext' or parent.get('status')!='accessible'
+        if parent.get('kind')=='file':
+            from .full_workflow_access import verified_pmc_table_metadata
+            metadata=(verified_pmc_table_metadata(paper,parent)
+                      if paper and paper.get('_official_verified') is True else None)
+            if metadata is None:raise ValueError('HTML file requires verified official PMC table metadata')
+            parent=copy.deepcopy(parent)
+            parent.update(identity_match=True,table_article_metadata=metadata,
+                          identity_recovery='official_PMC_table_metadata_and_verified_DOI')
+        if (parent.get('kind') not in {'fulltext','file'} or parent.get('status')!='accessible'
                 or not parent.get('identity_match') or parent.get('http_status')!=200
                 or not parent.get('complete_body') or parent.get('cloud_checksum',{}).get('verified') is False):
             raise ValueError('HTML table requires complete verified article evidence')

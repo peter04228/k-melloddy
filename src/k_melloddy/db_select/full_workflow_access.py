@@ -126,13 +126,26 @@ def recover_pmc_table_identity(paper,record):
     if (record.get('kind')!='fulltext' or record.get('status')!='fetch_error'
             or record.get('failure_reason')!='article_identity_not_verified'
             or record.get('http_status')!=200 or not record.get('complete_body')):return record
+    metadata=verified_pmc_table_metadata(paper,record)
+    if metadata is None:return record
+    record.update(status='accessible',failure_reason='',identity_match=True,level='response_sample',
+                  identity_recovery='official_PMC_table_metadata_and_verified_DOI',
+                  prior_classification={'status':'fetch_error','failure_reason':'article_identity_not_verified'},
+                  table_article_metadata=metadata)
+    record.setdefault('identity_checks',{}).update(title=True,doi=True,pmcid=True)
+    return record
+
+
+def verified_pmc_table_metadata(paper,record):
+    """Read-only identity binding for actual official PMC table response bytes."""
+    if record.get('http_status')!=200 or not record.get('complete_body'):return None
     values=paper['values'];pmcid=values.get('PMCID','');doi=values.get('DOI','')
-    if not re.fullmatch(r'PMC[0-9]+',pmcid) or not doi or not values.get('Title'):return record
+    if not re.fullmatch(r'PMC[0-9]+',pmcid) or not doi or not values.get('Title'):return None
     parent='https://pmc.ncbi.nlm.nih.gov/articles/'+pmcid+'/'
     urls=[urlsplit(record.get(k,'')) for k in ['url','final_url']]
     if any(u.scheme!='https' or u.netloc!='pmc.ncbi.nlm.nih.gov' or u.query or u.fragment
-           or not re.fullmatch('/articles/'+pmcid+r'/table/[A-Za-z0-9_-]+/',u.path) for u in urls):return record
-    if urls[0]!=urls[1]:return record
+           or not re.fullmatch('/articles/'+pmcid+r'/table/[A-Za-z0-9_-]+/',u.path) for u in urls):return None
+    if urls[0]!=urls[1]:return None
     class Metadata(HTMLParser):
         def __init__(self):super().__init__();self.fields={};self.links=[]
         def handle_starttag(self,tag,attrs):
@@ -142,23 +155,18 @@ def recover_pmc_table_identity(paper,record):
     try:
         raw=base64.b64decode(record.get('body_sample_b64',''),validate=True)
         if (not raw or len(raw)>8*1024*1024 or len(raw)!=record.get('bytes_observed')
-                or digest(raw)!=record.get('payload_sha256')):return record
+                or digest(raw)!=record.get('payload_sha256')):return None
         meta=Metadata();meta.feed(raw.decode('utf-8-sig'));meta.close()
-    except (ValueError,UnicodeError):return record
+    except (ValueError,UnicodeError):return None
     norm=lambda s:' '.join(re.findall(r'\w+',unicodedata.normalize('NFKC',s).casefold()))
     expected=norm(values['Title']);titles=meta.fields.get('og:title',[])
     # PMC may prefix the same official title with the article "The".
-    if len(titles)!=1 or norm(titles[0]) not in {expected,'the '+expected}:return record
-    if meta.fields.get('og:url')!=[parent] or parent not in [urljoin(record['url'],u) for u in meta.links]:return record
+    if len(titles)!=1 or norm(titles[0]) not in {expected,'the '+expected}:return None
+    if meta.fields.get('og:url')!=[parent] or parent not in [urljoin(record['url'],u) for u in meta.links]:return None
     doi_links=[u for u in meta.links if urlsplit(u).netloc=='doi.org']
-    if len(doi_links)!=1 or doi_links[0].casefold()!='https://doi.org/'+doi.casefold():return record
-    record.update(status='accessible',failure_reason='',identity_match=True,level='response_sample',
-                  identity_recovery='official_PMC_table_metadata_and_verified_DOI',
-                  prior_classification={'status':'fetch_error','failure_reason':'article_identity_not_verified'},
-                  table_article_metadata={'pmcid':pmcid,'title':titles[0],'doi_url':doi_links[0],
-                                          'article_url':parent,'scope':'standalone table; not full article review'})
-    record.setdefault('identity_checks',{}).update(title=True,doi=True,pmcid=True)
-    return record
+    if len(doi_links)!=1 or doi_links[0].casefold()!='https://doi.org/'+doi.casefold():return None
+    return {'pmcid':pmcid,'title':titles[0],'doi_url':doi_links[0],
+            'article_url':parent,'scope':'standalone table; not full article review'}
 
 
 class ScanImages(HTMLParser):

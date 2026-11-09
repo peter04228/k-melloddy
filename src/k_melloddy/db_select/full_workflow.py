@@ -82,7 +82,7 @@ class SessionProvider(SubmittedReviewProvider):
             validate_evidence(bundle)
         if review.get('html_table_selections'):
             from .html_table_review import selected_html_tables
-            bundle=selected_html_tables(bundle,review['html_table_selections'])
+            bundle=selected_html_tables(bundle,review['html_table_selections'],paper=paper)
             validate_evidence(bundle)
         if review.get('ltkb_pdf_selections'):
             from .archive_review import selected_ltkb_pdf_tables
@@ -275,6 +275,10 @@ class CachedCollector:
             from .form_material_capture import append_form_materials
             bundle=append_form_materials(self.engine.root,paper,bundle,form_captures)
             validate_evidence(bundle)
+        http_captures=self.engine.provider.entry(paper,policy).get('public_http_captures',[])
+        if http_captures:
+            from .http_material_capture import append_http_materials
+            bundle=append_http_materials(self.engine.root,paper,bundle,http_captures)
         bundle['extracted_context']=extract_context(bundle)
         return bundle
 

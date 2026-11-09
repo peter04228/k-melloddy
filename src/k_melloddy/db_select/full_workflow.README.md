@@ -1,5 +1,7 @@
 # Per-paper full workflow
 
+Reviewed public GET receipts: optional per-paper `public_http_captures` names immutable run-relative JSON receipts and hashes. After native discovery, `CachedCollector` imports only matching-paper successful public file/API GET receipts for same-role URLs already attempted by the collector. Original failures are retained, imported bytes/length/hash are checked, and import itself makes no request or structure claim. Full-text review, actual cells and scientific eligibility still require a hash-bound answer. `html_table_selections` can bind an imported official PMC standalone-table file to the officially verified paper without changing its original kind or claiming the article was downloaded. Invalid imports stop the unfinished review. Resume uses stable capture IDs; no duplicate or finalized-result overwrite. Detailed contracts, limits, commands and tests are in `http_material_capture.README.md` and `html_table_review.README.md`.
+
 ## 명시적인 초록 검토와 본문 판별 (2026-11-09)
 
 오프라인 회귀 결과: 71 passed (36.45s), exit code 0. 기존 Windows pytest 임시 폴더 정리 PermissionError는 테스트 성공 후 발생했다.
