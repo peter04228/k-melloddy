@@ -64,6 +64,60 @@ def recover_typographic_identity(paper, record):
         record.setdefault('identity_checks',{}).update(title=True,doi=True)
     else:
         recover_pmc_table_identity(paper,record)
+        recover_lww_split_title_identity(paper,record)
+    return record
+
+
+def recover_lww_split_title_identity(paper,record):
+    """Match the publisher's explicit title/subtitle without changing title words."""
+    if (record.get('kind')!='fulltext' or record.get('status')!='fetch_error'
+            or record.get('failure_reason')!='article_identity_not_verified'
+            or record.get('http_status')!=200 or not record.get('complete_body')):return record
+    values=paper['values'];doi=values.get('DOI','');title=values.get('Title','')
+    if not re.fullmatch(r'10\.1097/[A-Za-z0-9._/-]+',doi,re.I) or not title:return record
+    original=urlsplit(record.get('url',''));final=urlsplit(record.get('final_url',''))
+    if (final.scheme!='https' or final.netloc!='journals.lww.com' or final.query or final.fragment
+            or not re.fullmatch(r'/[A-Za-z0-9_-]+/fulltext/'+re.escape(doi)+r'~[A-Za-z0-9_-]+',final.path,re.I)):
+        return record
+    if original!=final and (original.scheme!='https' or original.netloc!='doi.org'
+            or original.path.casefold()!='/'+doi.casefold() or original.query or original.fragment):return record
+    class Headings(HTMLParser):
+        def __init__(self):super().__init__();self.headings={};self.active=None;self.depth=0;self.canonical=[]
+        def handle_starttag(self,tag,attrs):
+            a=dict(attrs)
+            if tag=='meta' and a.get('property')=='og:url':self.canonical.append(a.get('content',''))
+            key=a.get('id')
+            if (tag,key) in [('h1','omni-article-title'),('h2','omni-article-sub-title')]:
+                if self.active:raise ValueError('Nested article heading')
+                self.headings.setdefault(key,[]).append([]);self.active=key;self.depth=1
+            elif self.active:self.depth+=1
+        def handle_endtag(self,tag):
+            if self.active:
+                self.depth-=1
+                if self.depth==0:self.active=None
+        def handle_data(self,data):
+            if self.active:self.headings[self.active][-1].append(data)
+    try:
+        raw=base64.b64decode(record.get('body_sample_b64',''),validate=True)
+        if (not raw or len(raw)>8*1024*1024 or len(raw)!=record.get('bytes_observed')
+                or digest(raw)!=record.get('payload_sha256')):return record
+        meta=Headings();meta.feed(raw.decode('utf-8-sig'));meta.close()
+        if meta.active or meta.canonical!=[record['final_url']]:return record
+        parts=[]
+        for key in ['omni-article-title','omni-article-sub-title']:
+            headings=meta.headings.get(key,[])
+            if len(headings)!=1:return record
+            parts.append(''.join(headings[0]).strip())
+        norm=lambda s:' '.join(re.findall(r'\w+',unicodedata.normalize('NFKC',s).casefold()))
+        if not all(parts) or norm(' '.join(parts))!=norm(title):return record
+        if doi.casefold() not in re.sub(r'\s+','',record.get('text','')).casefold():return record
+    except (ValueError,UnicodeError):return record
+    record.update(status='accessible',failure_reason='',identity_match=True,level='response_sample',
+                  identity_recovery='official_LWW_split_title_and_verified_DOI',
+                  prior_classification={'status':'fetch_error','failure_reason':'article_identity_not_verified'},
+                  article_heading_metadata={'title':parts[0],'subtitle':parts[1],'canonical_url':record['final_url'],
+                                            'scope':'article identity only; content review still required'})
+    record.setdefault('identity_checks',{}).update(title=True,doi=True)
     return record
 
 
