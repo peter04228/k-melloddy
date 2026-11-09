@@ -23,18 +23,15 @@ Excel 생성에는 별도로 Node.js와 `@oai/artifact-tool`을 제공하는 런
 
 ## 현재 110편 검수 상태 가져오기
 
-코드 clone만으로 연구 데이터가 내려오지는 않습니다. [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `k-melloddy-liver-15860-checkpoint-20261109.zip`과 `.zip.sha256`을 받아야 합니다. 비공개 릴리스이므로 저장소 접근 권한이 필요합니다. ZIP 해시를 확인한 다음 새로 clone한 프로젝트에 복원합니다. 기존 검수 폴더가 있는 PC에는 덮어쓰지 않습니다.
+코드 clone만으로 연구 데이터가 내려오지는 않습니다. **현재 연구 데이터 릴리스는 업로드 승인 대기 상태입니다.** 게시 후 [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `checkpoint_download.json`과 `k-melloddy-liver-15860-checkpoint-20261109.zip.part001`~`.part005`를 모두 받습니다. 비공개 릴리스이므로 저장소 접근 권한이 필요합니다. 전체 압축본은 약 2.24GB이며 압축 해제 전 조각을 다시 결합합니다.
 
 아래 명령은 ZIP을 현재 사용자의 Downloads 폴더에 받았다고 가정합니다.
 
 ```powershell
-$checkpointZip = Join-Path $env:USERPROFILE 'Downloads\k-melloddy-liver-15860-checkpoint-20261109.zip'
-$checkpointSha = (Get-Content -LiteralPath ($checkpointZip + '.sha256') -Raw).Split(' ')[0].Trim()
-if ((Get-FileHash -LiteralPath $checkpointZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $checkpointSha) { throw 'Checkpoint SHA-256 mismatch' }
-Expand-Archive -LiteralPath $checkpointZip -DestinationPath 'C:\dev\k-melloddy'
+powershell -NoProfile -ExecutionPolicy Bypass -File 'C:\dev\k-melloddy\src\k_melloddy\restore_checkpoint.ps1'
 ```
 
-압축본 안의 `CHECKPOINT_MANIFEST_20261109.json`에는 원본·배치·현재 검수 상태와 각 파일의 해시가 있습니다. 원본 CSV와 불변 검수 기록을 수정하지 않습니다.
+복원 도구는 모든 조각과 결합 ZIP의 해시를 확인하고, 압축본 내부 `CHECKPOINT_MANIFEST_20261109.json`과 파일 크기·해시를 검증합니다. 기존 파일이 다르면 덮어쓰지 않습니다. 이미 같은 파일이 있으면 건너뛰므로 완료된 복원은 재실행할 수 있습니다. 상세 계약·중단 시 제한은 `src/k_melloddy/restore_checkpoint.README.md`를 참고합니다. 조각 + 결합 ZIP + 복원 파일이 함께 존재할 공간이 필요합니다.
 
 보존·복원할 핵심 경로:
 
@@ -58,7 +55,7 @@ C:\dev\k-melloddy\projects\Liver\DB_Select\Output\2026-11-07\liver-15860-batch15
 ## 검증
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/test_progress_excel.py tests/test_batch_workflow.py tests/test_full_workflow.py tests/test_pdf_material.py -q
+.\.venv\Scripts\python.exe -m pytest tests/test_progress_excel.py tests/test_batch_workflow.py tests/test_full_workflow.py tests/test_pdf_material.py tests/test_checkpoint_restore.py -q
 ```
 
 오프라인 테스트는 실수집·실검수를 시작하지 않습니다. 새 PC에서 런타임 설치와 Excel 출력까지 확인해야 인계가 완료됩니다. 프로그램 자체의 중단 지점 재개는 지원하지만, 프로세스 자동 재시작이나 검수 답변의 무인 생성은 지원하지 않습니다.
