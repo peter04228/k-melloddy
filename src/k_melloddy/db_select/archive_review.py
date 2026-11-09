@@ -168,6 +168,10 @@ def selected_tables(bundle, selections):
                 data=archive.read(matches[0])
                 chain.append({'member':name,'sha256':digest(data),'bytes':len(data)})
         from openpyxl import load_workbook
+        if selection.get('column_indices') is not None and (
+                (members and members[-1].casefold().endswith('.csv'))
+                or data.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1')):
+            raise ValueError('Explicit column selection supports XLSX only')
         row_number=selection['header_row']
         if type(row_number)!=int or not 1<=row_number<=20:raise ValueError('Invalid header row')
         if members and members[-1].casefold().endswith('.csv'):
@@ -202,8 +206,20 @@ def selected_tables(bundle, selections):
             book=load_workbook(io.BytesIO(data),read_only=True,data_only=False)
             try:
                 sheet=book[selection['sheet']]
-                if sheet.max_column>256:raise ValueError('Workbook column limit')
-                rows=list(sheet.iter_rows(min_row=row_number,max_row=row_number+100,max_col=256,values_only=True))
+                selected=selection.get('column_indices')
+                if selected is not None:
+                    if (not isinstance(selected,list) or not 1<=len(selected)<=32
+                            or any(type(i)!=int or not 1<=i<=256 for i in selected)
+                            or len(selected)!=len(set(selected)) or sheet.max_column>1024
+                            or not selection.get('column_selection_reason','').strip()):
+                        raise ValueError('Invalid explicit workbook column selection')
+                    rows=list(sheet.iter_rows(min_row=row_number,max_row=row_number+100,max_col=max(selected),values_only=True))
+                    rows=[[row[i-1] for i in selected] for row in rows]
+                    if not rows or list(rows[0])!=selection.get('expected_columns'):
+                        raise ValueError('Selected workbook headers changed')
+                else:
+                    if sheet.max_column>256:raise ValueError('Workbook column limit')
+                    rows=list(sheet.iter_rows(min_row=row_number,max_row=row_number+100,max_col=256,values_only=True))
             finally:book.close()
             file_format='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         while rows and rows[0] and rows[0][-1] in (None,''):
