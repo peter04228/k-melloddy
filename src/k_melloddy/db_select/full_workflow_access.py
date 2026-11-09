@@ -50,6 +50,12 @@ def recover_typographic_identity(paper, record):
         text=unicodedata.normalize('NFKC',text).casefold()
         return ' '.join(''.join('-' if unicodedata.category(c)=='Pd' else c for c in text).split()).rstrip('.')
     title=normalized(paper['values'].get('Title',''));body=normalized(record.get('text',''))
+    # PubMed encloses translated titles in square brackets; PMC prints the same
+    # translated words without that bibliographic wrapper. Do not remove inner
+    # brackets or alter the title words, and still require the verified DOI.
+    if title.startswith('[') and title.endswith(']'):
+        if record.get('identity_checks',{}).get('pmid') is not True:return record
+        title=title[1:-1].strip()
     doi=paper['values'].get('DOI','').casefold()
     if title and title in body and doi and doi in re.sub(r'\s+','',body):
         record.update(status='accessible',failure_reason='',identity_match=True,level='response_sample',
