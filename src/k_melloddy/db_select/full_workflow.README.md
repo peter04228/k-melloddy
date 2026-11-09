@@ -111,3 +111,11 @@ An explicit session `public_form_captures` receipt can append an actually receiv
 # Linked author-version identity (2026-11-09)
 
 An explicit `evidence_review.manuscript_identity_bindings` selection can bind a title-variant manuscript only to an exact official free-PDF link with matching PMID, DOI, canonical metadata title, full primary title and author surnames. The original mismatch, title, bytes and HTTP response are preserved; no inclusion or completed-reading claim follows automatically. See [manuscript_binding.README.md](manuscript_binding.README.md) for inputs, outputs, algorithm, states, units, audit, validation, retries/resume, commands, tests and conservative limits. Run `python -m pytest tests/test_manuscript_binding.py tests/test_full_workflow.py tests/test_verified_select.py -q`.
+
+## 동일 URL의 원문·자료파일 역할 (2026-11-09)
+
+입력의 명시적 observed_discovery_urls는 URL과 kind의 조합으로 구분한다. 같은 공개 PDF를 이미 fulltext로 확보했더라도 검토자가 file로 지정한 요청을 별도로 수행·저장한다. 원래 응답의 역할·바이트·인용·ID를 수정하거나 파일 검증 성공으로 승격하지 않는다. 같은 URL·역할은 중복 요청하지 않으며 기존 Referer 검증·응답 크기·재시도·해시 기반 캐시·재개 규칙을 유지한다. 상태와 감사 단위는 역할별 실제 HTTP 응답이며 새 근거는 별도 요청/답변 해시와 단계 이벤트로 추적한다. 기존 확정 결과와 연구 원본에는 소급 적용하지 않는다.
+
+검증 명령: python -m pytest tests/test_full_workflow.py tests/test_verified_select.py tests/test_revalidation_campaign.py tests/test_select_stabilization.py -q. 동일 PDF URL의 원문 응답 보존, 명시적 파일 요청 1회, 동일 역할 중복 방지, 중단·재개 후 캐시 재사용 및 자동 판정 미생성을 회귀 검증한다. 한계: file 지정은 실제 파일 수집 역할일 뿐 데이터 적합성·독성 인과성·헤더·포함을 인증하지 않는다. 파일의 실제 내용과 연구 맥락은 별도로 검토해야 한다.
+
+검증 결과: 68 passed (36.91s), exit code 0. Windows pytest 임시 디렉터리 정리 PermissionError는 성공 후 종료 훅에서 발생했으며 테스트 실패는 없었다.

@@ -361,10 +361,11 @@ class FullWorkflowAccess(RevalidationAccess):
     def __init__(self,*args,**kwargs):super().__init__(*args,**kwargs);self.engine=None
     def additional_discovery(self,paper,prior,additions):
         bundle=copy.deepcopy(prior)
-        seen={e['url'] for e in bundle['records']}
+        seen={(e['url'],e['kind']) for e in bundle['records']}
         for item in additions:
-            if item['url'] in seen and not item.get('referer'):continue
-            seen.add(item['url'])
+            pair=(item['url'],item['kind'])
+            if pair in seen and not item.get('referer'):continue
+            seen.add(pair)
             request_paper=paper
             if item.get('referer'):
                 if not any(e['url']==item['referer'] and item['url'] in e.get('observed_links',[]) for e in bundle['records']):
@@ -375,9 +376,9 @@ class FullWorkflowAccess(RevalidationAccess):
             for e in found:
                 if e['kind']!='fulltext' or not e.get('identity_match'):continue
                 for url in e.get('observed_links',[]):
-                    if '/pdf/' not in urlsplit(url).path.lower() or url in seen:continue
+                    if '/pdf/' not in urlsplit(url).path.lower() or (url,'fulltext') in seen:continue
                     if urlsplit(url).hostname!=urlsplit(e['final_url']).hostname:continue
-                    seen.add(url);bundle['records']+=self.request(url,'fulltext',paper,'observed_publisher_pdf');break
+                    seen.add((url,'fulltext'));bundle['records']+=self.request(url,'fulltext',paper,'observed_publisher_pdf');break
         bundle['search_coverage'].append({'target':'reviewer_additional_routes','state':'attempted','urls':[x['url'] for x in additions]})
         return bundle
     def request(self,url,kind,paper,route):

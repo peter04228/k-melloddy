@@ -200,6 +200,60 @@ def test_additional_evidence_versions_request_without_reusing_old_answer(tmp_pat
     finally:e.close()
 
 
+def test_explicit_file_role_at_article_url_preserves_original_and_skips_duplicate():
+    from k_melloddy.db_select.full_workflow_access import FullWorkflowAccess
+    from k_melloddy.db_select.fixtures import evidence_record
+    url='https://fixture.invalid/article-with-data.pdf'
+    original=evidence_record('article',url=url)
+    prior={'records':[original],'search_coverage':[]}
+    before=copy.deepcopy(prior)
+    access=FullWorkflowAccess()
+    material=evidence_record('material','file',url=url)
+    route={'url':url,'kind':'file'}
+    with patch.object(access,'request',return_value=[material]) as request:
+        result=access.additional_discovery({},prior,[route,route])
+        assert request.call_count==1
+        assert request.call_args.args[1]=='file'
+        assert access.additional_discovery({},result,[route])['records']==result['records']
+        assert request.call_count==1
+    assert prior==before
+    assert [(e['evidence_id'],e['kind']) for e in result['records']]==[('article','fulltext'),('material','file')]
+
+
+def test_same_url_new_material_role_is_collected_once_across_resume(tmp_path):
+    from k_melloddy.db_select.fixtures import evidence_record
+    project,parent,path,cases,verifier=setup(tmp_path)
+    url='https://fixture.invalid/article-with-data.pdf'
+    original=evidence_record('article',url=url)
+    cases['1']['evidence']['records'].append(original)
+    source=copy.deepcopy(cases['1']['evidence'])
+    data=json.loads(path.read_text(encoding='utf-8'))
+    first=next(iter(data['papers'].values()))
+    first['observed_discovery_urls']=[{'url':url,'kind':'file'}]
+    path.write_text(dump(data),encoding='utf-8')
+    class Collector(FixtureEvidenceCollector):
+        def __init__(self):super().__init__(cases);self.additions=[]
+        def additional_discovery(self,paper,prior,additions):
+            self.additions.extend(copy.deepcopy(additions))
+            result=copy.deepcopy(prior)
+            result['records'].append(evidence_record('material','file',url=url))
+            return result
+        def verify_materials(self,paper,bundle):return bundle
+    collector=Collector()
+    e=FullWorkflow(project/'DB_Select',organ='Heart',review_file=path,verifier=verifier,collector=collector)
+    try:
+        result=e.execute(parent,'dual-role')
+        request=json.loads(Path(result['request']).read_text(encoding='utf-8'))
+        roles=[x['kind'] for x in request['evidence']['records'] if x['url']==url]
+        assert roles==['fulltext','file']
+        assert collector.additions==[{'url':url,'kind':'file'}]
+        assert e.execute(parent,'dual-role')['request']==result['request']
+        assert len(collector.additions)==1
+        assert e.store.records(e.run_id)=={}  # A file response never creates a scientific verdict.
+        assert cases['1']['evidence']==source
+    finally:e.close()
+
+
 def test_europe_pmc_free_link_is_attempted_without_assuming_fulltext():
     from k_melloddy.db_select.access_workflow import AccessInvestigator
     seen=[]

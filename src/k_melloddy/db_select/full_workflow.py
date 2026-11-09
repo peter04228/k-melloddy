@@ -220,9 +220,9 @@ class CachedCollector:
                 if record['evidence_id'] not in seen_ids:
                     item=copy.deepcopy(record);item['reused_from_prior_round']=True
                     bundle['records'].append(item);seen_ids.add(item['evidence_id'])
-        observed={e['url'] for e in bundle['records']}
-        additions=[x for x in paper.get('_review_discovery',[])[:8] if x['url'] not in observed or
-                   (x.get('referer') and not any(e['url']==x['url'] and e.get('request_referer')==x['referer'] for e in bundle['records']))]
+        observed={(e['url'],e['kind']) for e in bundle['records']}
+        additions=[x for x in paper.get('_review_discovery',[])[:8] if (x['url'],x['kind']) not in observed or
+                   (x.get('referer') and not any(e['url']==x['url'] and e['kind']==x['kind'] and e.get('request_referer')==x['referer'] for e in bundle['records']))]
         if additions and hasattr(self.real,'additional_discovery'):
             def supplement():
                 extended=self.real.additional_discovery(paper,bundle,additions)
