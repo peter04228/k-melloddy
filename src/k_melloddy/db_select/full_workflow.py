@@ -139,6 +139,10 @@ class SessionProvider(SubmittedReviewProvider):
             e=lookup[item['reference']['evidence_id']]
             if e['kind']!='fulltext' or not e['identity_match'] or item['classification']!='abstract_only':
                 raise ValueError('Unsupported content access classification')
+            # A publisher menu can contain "Methods" in another book title.
+            # Preserve transport evidence, but let a cited explicit review
+            # classify this derived response as an abstract rather than a body.
+            e['reviewed_content']=copy.deepcopy(item)
         bundle['session_review']={'reviewer_note':answer['reviewer_note'],'checked_at':now(),
                                   'answer_sha256':digest(dump(answer).encode())}
         if review.get('access_constraints'):

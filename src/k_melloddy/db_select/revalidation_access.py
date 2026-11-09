@@ -26,8 +26,20 @@ def scholarly_match(hit,paper):
     return bool((official_doi and found_doi==official_doi) or found_pmid==paper['pmid'] or norm(hit.get('title') or '')==norm(paper['values']['Title']))
 
 
+def reviewed_abstract_content(e):
+    """Respect an explicit cited content review over a prose keyword heuristic."""
+    review=e.get('reviewed_content',{})
+    ref=review.get('reference',{})
+    return bool(review.get('classification')=='abstract_only'
+                and e.get('kind')=='fulltext' and e.get('status')=='accessible'
+                and e.get('identity_match') and ref.get('evidence_id')==e.get('evidence_id')
+                and isinstance(ref.get('quote'),str) and ref['quote']
+                and ref['quote'] in e.get('text',''))
+
+
 def readable_body(e):
     if e.get('kind')!='fulltext' or e.get('status')!='accessible' or not e.get('identity_match'):return False
+    if reviewed_abstract_content(e):return False
     # Scholarly indexes may list an abstract page as an article location.
     if urlsplit(e.get('final_url',e.get('url',''))).hostname in {'pubmed.ncbi.nlm.nih.gov','openalex.org','api.openalex.org'}:return False
     text=e.get('text','')
@@ -52,6 +64,7 @@ def readable_body(e):
 
 
 def body_requires_review(e):
+    if reviewed_abstract_content(e):return False
     if readable_body(e):return True
     if e.get('status')!='accessible' or not e.get('identity_match'):return False
     import xml.etree.ElementTree as ET

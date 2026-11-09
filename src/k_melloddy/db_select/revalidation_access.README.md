@@ -1,5 +1,13 @@
 # Independent revalidation discovery
 
+## 명시적인 초록 검토와 본문 판별 (2026-11-09)
+
+오프라인 회귀 결과: 71 passed (36.45s), exit code 0. 기존 Windows pytest 임시 폴더 정리 PermissionError는 테스트 성공 후 발생했다.
+
+입력은 기존 `evidence_review.content_access_review`의 `abstract_only` 판정과 실제 인용 근거다. 접근·논문 식별·인용 검증을 통과하면 복사된 응답에 `reviewed_content`를 기록한다. 출판사 메뉴의 다른 책 제목에 나온 Methods 때문에 초록 페이지가 본문으로 집계되는 것을 막는다. 해당 응답의 본문 판별·접근 상태에만 반영하며, 별도 경로의 실제 본문은 계속 검토해야 한다. HTTP 상태·내용·URL·해시·원본 캐시와 완료된 판정은 보존한다. 자동 초록 판정이나 데이터 검증 성공을 생성하지 않는다.
+
+단위는 응답 한 건이며 기존 답변 해시·검토 시각·증거 참조로 추적한다. 추가 네트워크 요청은 없고 기존 제한 재시도·논문별 저장/재개 절차를 사용한다. 검증: `python -m pytest tests/test_reviewed_abstract_content.py tests/test_full_workflow.py tests/test_verified_select.py tests/test_revalidation_campaign.py tests/test_select_stabilization.py -q`. 메뉴의 Methods 오인식, 실제 별도 본문 보호, 미인용 표시 거부, 검색·재시도 조건 및 원본 보존을 확인한다. 한계: 검토자가 실제 페이지 내용을 읽고 명시적으로 분류해야 한다.
+
 PubMed and OpenAlex abstract/index pages cannot establish full-text access. PMC OCR prose in a `preformat` element is recognized as available text but is not automatically reviewed. Explicit hash-checked review of observed scan pages is supported by [captured review](captured_review.README.md). Each scan GET retains its original timestamp and URL. The human review and network pass are separately labelled in history.
 
 Inputs: officially verified PMID/title/DOI/PMCID, policy, previously evidenced DB names and optional reviewer-observed discovery URLs. The collector uses only verified metadata for article routes. Inputs remain unchanged.
