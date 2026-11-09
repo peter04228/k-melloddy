@@ -4,3 +4,5 @@ PyYAML==6.0.3
 openpyxl==3.1.5
 xlrd==2.0.2
 pypdf==6.14.2
+# Optional explicit PDF grid review reader.
+PyMuPDF==1.27.2.3

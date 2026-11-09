@@ -11,6 +11,7 @@ dependencies = ["PyYAML>=6", "openpyxl>=3.1", "xlrd>=2.0", "pypdf>=6"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+review = ["PyMuPDF>=1.26"]
 
 [project.scripts]
 k-melloddy = "k_melloddy.cli:main"

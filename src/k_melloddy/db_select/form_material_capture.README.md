@@ -1,0 +1,13 @@
+# Public supplementary form receipts
+
+Inputs: explicit `public_form_captures` references in a session review entry, with run-relative immutable JSON paths and SHA-256. Each receipt names the internal ID, PMID, verified source article evidence ID/hash, actual HTTP POST response, reviewer explanation and optional observed PDF archive members. This is an opt-in import of a completed public request, not automatic form submission.
+
+Algorithm: verify path containment, receipt/response hashes and byte counts; find the exact same-origin HTTPS POST form labelled Supplementary in the identity-verified captured article. All its inputs must be hidden. Reject redirects, different papers, changed source captures, non-200 or incomplete responses. Preserve original transport status, timestamp, method and bytes. No login, payment, CAPTCHA bypass, hidden credential publication or fabricated GET URL is involved.
+
+Outputs and states: append a `file/response_sample` record and, when explicitly selected, a derived PDF member with parent evidence ID, archive name, byte count/hash and extracted text. Import alone gives no structured-data, toxicity, inclusion or dataset-count claim. Original bundle/cache files remain unchanged. Returned evidence is validated by the normal workflow and retained in its JSON/SQLite audit trail.
+
+Units/limits: bytes and SHA-256; maximum three receipts and three selected members per receipt, 8 MiB per source/response/member, 64 PDF pages and 250,000 extracted characters. Archive inspection streams one safe observed member to stdout; it never extracts filesystem paths or executes contents. A 15-second kill timer and bounded stdout protect archive reads. RAR requires a RAR-capable `tar`/bsdtar (Windows system tar was tested); unavailable readers stop the review instead of inventing contents. PDF text uses the existing pypdf dependency.
+
+Resume/retries: immutable receipts can be reimported deterministically, with stable evidence IDs and no duplicate records. Reimport does not issue a network retry. A later public request must be saved as a new receipt, preserving the old attempt. Existing finalized reviews are not automatically reopened.
+
+Commands/tests: `python -m pytest tests/test_form_material_capture.py tests/test_full_workflow.py -q`. Offline tests cover identity/hash/origin/method/completeness failures, original preservation, archive traversal, actual PDF grid extraction and exact values. Actual HTTP access remains separately authorized research work. Limitations: reviewer-attested response provenance, hidden-input supplementary forms only, unencrypted selected PDFs only; availability of a file is not scientific eligibility.

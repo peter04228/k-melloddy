@@ -72,6 +72,10 @@ class SessionProvider(SubmittedReviewProvider):
         answer = self.response(paper, policy, bundle)
         bundle = copy.deepcopy(bundle)
         review = answer.get('evidence_review', {})
+        if review.get('pdf_grid_selections'):
+            from .pdf_grid_review import selected_pdf_grids
+            bundle=selected_pdf_grids(bundle,review['pdf_grid_selections'])
+            validate_evidence(bundle)
         if review.get('html_table_selections'):
             from .html_table_review import selected_html_tables
             bundle=selected_html_tables(bundle,review['html_table_selections'])
@@ -261,6 +265,11 @@ class CachedCollector:
         if captures:
             from .web_capture import append_captures
             bundle=append_captures(self.engine.root,paper,bundle,captures)
+            validate_evidence(bundle)
+        form_captures=self.engine.provider.entry(paper,policy).get('public_form_captures',[])
+        if form_captures:
+            from .form_material_capture import append_form_materials
+            bundle=append_form_materials(self.engine.root,paper,bundle,form_captures)
             validate_evidence(bundle)
         bundle['extracted_context']=extract_context(bundle)
         return bundle
