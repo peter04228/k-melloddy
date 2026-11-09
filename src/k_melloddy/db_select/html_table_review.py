@@ -1,8 +1,31 @@
 """Explicit tables from complete identity-verified article HTML; no requests."""
 import base64
 import copy
+import json
+import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from ..core.storage import digest, dump
+
+
+def jats_table_caption(raw,index,table_count):
+    """Read only the selected table's own explicit, unambiguous JATS caption."""
+    if b'<!ENTITY' in raw.upper():raise ValueError('Unsafe JATS XML entities')
+    try:root=ET.fromstring(raw)
+    except ET.ParseError as exc:raise ValueError('Malformed JATS article XML') from exc
+    if root.tag!='article':raise ValueError('JATS article root required')
+    tables=list(root.iter('table'))
+    if len(tables)!=table_count:raise ValueError('JATS table selection mismatch')
+    parents={child:parent for parent in root.iter() for child in parent}
+    wrapper=parents.get(tables[index])
+    if wrapper is None or wrapper.tag!='table-wrap':return None
+    captions=wrapper.findall('caption')
+    if len(captions)>1 or len(wrapper.findall('table'))!=1:
+        raise ValueError('Ambiguous JATS table caption')
+    if not captions:return None
+    if list(wrapper).index(captions[0])>list(wrapper).index(tables[index]):
+        raise ValueError('JATS caption must precede its own table')
+    text=' '.join(''.join(captions[0].itertext()).split())
+    return text or None
 
 
 class Tables(HTMLParser):
@@ -82,6 +105,8 @@ def selected_html_tables(bundle,selections,paper=None):
         if parser.table is not None:raise ValueError('Incomplete HTML table')
         if type(index)!=int or not 0<=index<len(parser.tables):raise ValueError('Invalid HTML table index')
         table=parser.tables[index];heads=table['head'];body=table['body']
+        caption=(jats_table_caption(raw,index,len(parser.tables))
+                 if parent.get('format','').split(';',1)[0].strip() in {'application/xml','text/xml'} else None)
         if not 1<=len(heads)<=8 or not body:raise ValueError('HTML table lacks header/data')
         grid={}
         for y,row in enumerate(heads):
@@ -112,5 +137,11 @@ def selected_html_tables(bundle,selections,paper=None):
                       text=dump({'columns':columns,'source_header_rows':heads,'sample':rows[:5]}),
                       sample_row_count=min(5,len(rows)),downloaded_full_dataset=False,
                       interpretation_note='Selected observed article HTML table; explicit header spans only, no merged data filling, inferred fields, counts or new request.')
+        if caption:
+            record['source_table_caption']=caption
+            content=json.loads(record['text'])
+            content['source_table_caption']=caption
+            record['text']=dump(content)
+            record['document_text']=caption+'\n'+record['text']
         if not any(e['evidence_id']==record['evidence_id'] for e in result['records']):result['records'].append(record)
     return result

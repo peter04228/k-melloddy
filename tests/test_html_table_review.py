@@ -79,3 +79,54 @@ def test_unselected_equation_layout_does_not_change_selected_data_table(before):
 def test_selected_table_index_remains_explicit_and_bounded(bad_index):
     with pytest.raises(ValueError,match='Invalid HTML table index'):
         selected_html_tables(evidence(),[dict(parent_evidence_id='article',table_index=bad_index)])
+
+
+def jats_evidence(caption='Observed paracetamol cohort',extra=''):
+    table='<table><thead><tr><th>Outcome</th><th>All admissions</th></tr></thead><tbody><tr><td>ALT &gt; 1000 U/L</td><td>3 (2%)</td></tr></tbody></table>'
+    xml='<article><body>'+extra+'<table-wrap id="T1"><caption><p>'+caption+'</p></caption>'+table+'</table-wrap></body></article>'
+    bundle=evidence(xml);bundle['records'][0]['format']='application/xml'
+    return bundle
+
+
+def test_jats_caption_binds_single_agent_without_inventing_a_column():
+    bundle=jats_evidence();before=copy.deepcopy(bundle)
+    result=selected_html_tables(bundle,[CHOICE]);e=result['records'][-1]
+    assert e['source_table_caption']=='Observed paracetamol cohort'
+    assert e['columns']==['Outcome','All admissions']
+    assert json.loads(e['text'])['sample']==[['ALT > 1000 U/L','3 (2%)']]
+    ds=dict(name='published table',identity='url:'+e['url'],version='T1',direct_url=e['url'],evidence_id=e['evidence_id'],
+            drug_identifier='constant:paracetamol',endpoint='Outcome',value_field='All admissions',
+            independence_reason='Only the published cohort summary; no patient rows inferred',
+            feature_count=None,compound_count=None,
+            evidence_refs=[dict(evidence_id=e['evidence_id'],quote='Observed paracetamol cohort')])
+    assert verify_dataset(ds,result)['drug_identifier']=='constant:paracetamol'
+    assert bundle==before and len(selected_html_tables(result,[CHOICE])['records'])==2
+    ds['drug_identifier']='constant:other-agent'
+    with pytest.raises(ValueError):verify_dataset(ds,result)
+
+
+def test_jats_other_table_or_body_drug_name_does_not_leak_into_caption():
+    extra='<p>paracetamol</p><table-wrap><caption><p>Other paracetamol table</p></caption><table><thead><tr><th>Other</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table></table-wrap>'
+    result=selected_html_tables(jats_evidence('Observed control cohort',extra),[dict(parent_evidence_id='article',table_index=1)])
+    e=result['records'][-1]
+    assert e['source_table_caption']=='Observed control cohort' and 'paracetamol' not in e['document_text']
+
+
+@pytest.mark.parametrize('mutation',[
+    lambda x:x.replace('<caption>','<caption><p>ambiguous</p></caption><caption>',1),
+    lambda x:x.replace('</body>',''),
+    lambda x:'<!DOCTYPE article [<!ENTITY drug "paracetamol">]>'+x,
+    lambda x:x.replace('<table-wrap id="T1">','<table-wrap id="T1"><table><thead><tr><th>Other</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>'),
+])
+def test_jats_ambiguous_or_unsafe_caption_cannot_supply_drug_context(mutation):
+    bundle=jats_evidence();xml=mutation(bundle['records'][0]['text'])
+    bundle=evidence(xml);bundle['records'][0]['format']='application/xml'
+    with pytest.raises(ValueError):selected_html_tables(bundle,[CHOICE])
+
+
+def test_non_xml_or_unwrapped_table_does_not_acquire_a_jats_caption():
+    bundle=jats_evidence();bundle['records'][0]['format']='text/html'
+    assert 'source_table_caption' not in selected_html_tables(bundle,[CHOICE])['records'][-1]
+    xml=bundle['records'][0]['text'].replace('<table-wrap id="T1">','').replace('</table-wrap>','')
+    bundle=evidence(xml);bundle['records'][0]['format']='application/xml'
+    assert 'source_table_caption' not in selected_html_tables(bundle,[CHOICE])['records'][-1]
