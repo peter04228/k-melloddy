@@ -107,6 +107,21 @@ def selected_docx_tables(bundle, selections):
             transport='document_table',columns=rows[0],level='sample_structure',
             text=dump({'selection':selection,'sample':rows[:6]}),downloaded_full_dataset=False,
             interpretation_note='Selected table from captured DOCX; parent URL/HTTP metadata retained; no new request or inferred columns')
+        if selection.get('transpose'):
+            # Exchange observed axes only: original case headers remain explicit
+            # row identifiers, and observed component labels become columns.
+            labels=[r[0] for r in rows[1:]]
+            if any(not label.strip() for label in labels) or len(set(labels))!=len(labels):
+                raise ValueError('Transposed DOCX requires unique nonempty row labels')
+            identifiers=rows[0][1:]
+            values=[[row[i] for row in rows[1:]] for i in range(1,len(rows[0]))]
+            if not identifiers:raise ValueError('Transposed DOCX has no observed identifiers')
+            record.update(columns=labels,source_columns=rows[0],source_axis_label=rows[0][0],
+                          table_row_identifiers=identifiers,table_orientation='explicit_transpose',
+                          sample_row_count=min(5,len(values)),
+                          text=dump({'selection':selection,'source_columns':rows[0],
+                                     'columns':labels,'sample':[{'row_identifier':identifiers[i],
+                                     'values':dict(zip(labels,value))} for i,value in enumerate(values[:5])]}))
         if selection.get('include_preceding_paragraph'):
             # Bind exposure context to this table, never to an earlier case/table.
             container=next(node for node in tree.iter() if table in list(node))
@@ -114,8 +129,9 @@ def selected_docx_tables(bundle, selections):
             preceding=siblings[position-1] if position else None
             if preceding is not None and preceding.tag!='{'+ns['w']+'}p':preceding=None
             context=' '.join(n.text or '' for n in preceding.findall('.//w:t',ns)) if preceding is not None else ''
+            context=' '.join(context.split())
             if not context.strip():raise ValueError('Selected DOCX table has no preceding paragraph')
-            record['document_text']=context+' '+ ' '.join(rows[0])
+            record['document_text']=context+' '+ ' '.join(record['columns'])
             record['text']='Selected table preceding paragraph:\n'+context+'\n'+record['text']
         if members:
             record.update(archive_members=chain,format='application/vnd.openxmlformats-officedocument.wordprocessingml.document',

@@ -46,6 +46,36 @@ def test_selected_docx_context_belongs_to_exact_table_and_supports_constant():
     assert bundle==before
 
 
+def test_explicit_docx_transpose_preserves_observed_case_identifiers_and_values():
+    import copy
+    import json
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    def cell(s):return '<w:tc><w:p><w:r><w:t>'+s+'</w:t></w:r></w:p></w:tc>'
+    matrix=[['component','Case 1','Case 2'],['ALT (U/L)','12','not done'],['score','-1','4']]
+    table=''.join('<w:tr>'+''.join(cell(s) for s in row)+'</w:tr>' for row in matrix)
+    xml=XML.split('<w:tbl>',1)[0].replace('All subjects exposed','All  subjects   exposed')+'<w:tbl>'+table+'</w:tbl></w:body></w:document>'
+    e=record(xml);e.update(status='accessible',payload_sha256=digest(base64.b64decode(e['body_sample_b64'])))
+    bundle={'records':[e]};before=copy.deepcopy(bundle)
+    choice=dict(parent_evidence_id='file',table_index=0,transpose=True,include_preceding_paragraph=True)
+    derived=selected_docx_tables(bundle,[choice])['records'][-1]
+    assert derived['columns']==['ALT (U/L)','score'] and derived['source_columns']==matrix[0]
+    assert derived['table_row_identifiers']==['Case 1','Case 2']
+    assert derived['source_axis_label']=='component' and derived['sample_row_count']==2
+    payload=json.loads(derived['text'].split('\n',2)[2])
+    assert payload['sample']==[{'row_identifier':'Case 1','values':{'ALT (U/L)':'12','score':'-1'}},
+                               {'row_identifier':'Case 2','values':{'ALT (U/L)':'not done','score':'4'}}]
+    assert bundle==before and len(selected_docx_tables({'records':[e,derived]},[choice])['records'])==2
+    dataset=dict(name='fixture',identity='url:'+e['url'],version='1',direct_url=e['url'],
+                 evidence_id=derived['evidence_id'],drug_identifier='constant:synthetic-drug',
+                 endpoint='ALT (U/L)',value_field='ALT (U/L)',independence_reason='fixture',
+                 feature_count=None,compound_count=None,evidence_refs=[dict(evidence_id=derived['evidence_id'],quote='All subjects exposed to synthetic-drug.')])
+    assert verify_dataset(dataset,{'records':[derived]})['compound_count'] is None
+    bad=record(xml.replace('ALT (U/L)','score'));bad.update(status='accessible',payload_sha256=digest(base64.b64decode(bad['body_sample_b64'])))
+    with pytest.raises(ValueError,match='unique nonempty row labels'):
+        selected_docx_tables({'records':[bad]},[choice])
+
+
 def test_selected_docx_context_cannot_come_from_previous_table_cell():
     from k_melloddy.core.storage import digest
     from k_melloddy.db_select.archive_review import selected_docx_tables
