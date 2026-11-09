@@ -38,7 +38,8 @@ def selected_docx_tables(bundle, selections):
         if b'<!ENTITY' in xml.upper() or b'<!DOCTYPE' in xml.upper():raise ValueError('Unsafe DOCX XML')
         ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
         index=selection['table_index']
-        tables=ET.fromstring(xml).findall('.//w:tbl',ns)
+        tree=ET.fromstring(xml)
+        tables=tree.findall('.//w:tbl',ns)
         if type(index)!=int or not 0<=index<len(tables):raise ValueError('Invalid DOCX table index')
         table=tables[index]
         selected_rows=table.findall('w:tr',ns)
@@ -55,6 +56,16 @@ def selected_docx_tables(bundle, selections):
             transport='document_table',columns=rows[0],level='sample_structure',
             text=dump({'selection':selection,'sample':rows[:6]}),downloaded_full_dataset=False,
             interpretation_note='Selected table from captured DOCX; parent URL/HTTP metadata retained; no new request or inferred columns')
+        if selection.get('include_preceding_paragraph'):
+            # Bind exposure context to this table, never to an earlier case/table.
+            preceding=None
+            for node in tree.iter():
+                if node is table:break
+                if node.tag=='{'+ns['w']+'}p':preceding=node
+            context=' '.join(n.text or '' for n in preceding.findall('.//w:t',ns)) if preceding is not None else ''
+            if not context.strip():raise ValueError('Selected DOCX table has no preceding paragraph')
+            record['document_text']=context+' '+ ' '.join(rows[0])
+            record['text']='Selected table preceding paragraph:\n'+context+'\n'+record['text']
         if members:
             record.update(archive_members=chain,format='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                           body_sample_b64=base64.b64encode(data).decode(),payload_sha256=digest(data),bytes_observed=len(data),

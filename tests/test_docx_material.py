@@ -22,6 +22,30 @@ XML='''<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2
 </w:body></w:document>'''
 
 
+def test_selected_docx_context_belongs_to_exact_table_and_supports_constant():
+    import copy
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    first=XML.split('<w:body>',1)[1].split('</w:body>',1)[0]
+    second=first.replace('synthetic-drug','second-drug')
+    e=record(XML.replace(first,first+second));e['status']='accessible'
+    e['payload_sha256']=digest(base64.b64decode(e['body_sample_b64']))
+    bundle={'records':[e]};before=copy.deepcopy(bundle)
+    choice=dict(parent_evidence_id='file',table_index=1,include_preceding_paragraph=True)
+    selected=selected_docx_tables(bundle,[choice])['records'][-1]
+    assert 'synthetic-drug' not in selected['document_text']
+    assert selected['document_text'].startswith('All subjects exposed to second-drug.')
+    d=dict(name='fixture',identity='url:'+e['url'],version='1',direct_url=e['url'],
+           evidence_id=selected['evidence_id'],drug_identifier='constant:second-drug',
+           endpoint='ALT',value_field='ALT',independence_reason='fixture',
+           feature_count=None,compound_count=None,evidence_refs=[
+               dict(evidence_id=selected['evidence_id'],quote='All subjects exposed to second-drug.')])
+    assert verify_dataset(d,{'records':[selected]})['drug_identifier']=='constant:second-drug'
+    d['drug_identifier']='constant:synthetic-drug'
+    with pytest.raises(ValueError,match='drug identity'):verify_dataset(d,{'records':[selected]})
+    assert bundle==before
+
+
 def test_selected_docx_inside_zip_preserves_captured_parent_and_hashes():
     from k_melloddy.core.storage import digest
     from k_melloddy.db_select.archive_review import selected_docx_tables
