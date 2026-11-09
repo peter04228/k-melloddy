@@ -8,7 +8,7 @@ Git에는 실행 코드, 설정, 테스트 코드, README 및 설치 의존성�
 
 ## 새 PC에서 설치
 
-기존 작업은 절대 경로를 포함하므로 우선 같은 위치에 설치합니다. 비공개 저장소이므로 소유자가 초대한 GitHub 계정으로 인증해야 합니다.
+기존 작업은 절대 경로를 포함하므로 우선 같은 위치에 설치합니다. 공개 저장소이므로 초대나 로그인 없이 코드를 clone할 수 있습니다.
 
 ```powershell
 git clone https://github.com/peter04228/k-melloddy.git C:\dev\k-melloddy
@@ -23,7 +23,7 @@ Excel 생성에는 별도로 Node.js와 `@oai/artifact-tool`을 제공하는 런
 
 ## 현재 110편 검수 상태 가져오기
 
-코드 clone만으로 연구 데이터가 내려오지는 않습니다. [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `checkpoint_download.json`과 `k-melloddy-liver-15860-checkpoint-20261109.zip.part001`~`.part005`를 모두 받습니다. 비공개 릴리스이므로 저장소 접근 권한이 필요합니다. 전체 압축본은 약 2.24GB이며 압축 해제 전 조각을 다시 결합합니다.
+코드 clone만으로 연구 데이터가 내려오지는 않습니다. [체크포인트 릴리스](https://github.com/peter04228/k-melloddy/releases/tag/checkpoint-20261109)에서 `checkpoint_download.json`과 `k-melloddy-liver-15860-checkpoint-20261109.zip.part001`~`.part005`를 모두 받습니다. 연구 데이터 릴리스도 공개되어 초대나 로그인 없이 다운로드할 수 있습니다. 전체 압축본은 약 2.24GB이며 압축 해제 전 조각을 다시 결합합니다.
 
 아래 명령은 ZIP을 현재 사용자의 Downloads 폴더에 받았다고 가정합니다.
 

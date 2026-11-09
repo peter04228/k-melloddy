@@ -1,6 +1,6 @@
 # K-MELLODDY
 
-> GitHub 비공개 저장소 설치와 현재 검수 상태 복원은 [README_GIT.md](README_GIT.md)를 참고하세요. 코드와 연구 데이터 압축본을 따로 배포합니다.
+> GitHub 공개 저장소 설치와 현재 검수 상태 복원은 [README_GIT.md](README_GIT.md)를 참고하세요. 코드와 연구 데이터 압축본을 따로 배포하며, 초대나 로그인 없이 접근할 수 있습니다.
 
 > 현재 15,860편 간독성 작업의 설치·인계·재개 안내는 [README_TRANSFER.md](README_TRANSFER.md)를 기준으로 확인합니다. 사용자의 요청으로 과거 Collect 실행 결과와 현재 작업 외 Select 시범 실행 기록을 정리했습니다. 아래 기존 설명에 있는 과거 결과 경로는 현재 존재하지 않을 수 있습니다. Collect 코드와 설정, 현재 CSV 및 11개 배치·검수 기록은 보존합니다.
 
