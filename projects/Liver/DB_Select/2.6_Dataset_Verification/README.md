@@ -257,3 +257,8 @@ ZIP 안의 DOCX도 정확한 멤버 이름과 표 번호를 지정하여 이미 
 단일 약물 임상표에서 약물명이 파일 자체의 표 제목에만 명시된 경우에는 `drug_identifier: constant:약물명`으로 관찰된 문맥을 명시할 수 있습니다. 같은 실제 파일의 제목 인용이 필요하며, endpoint와 값은 실제 열이어야 합니다. 환자번호를 약물 식별자로 사용하거나 원본에 가상 열을 추가하지 않습니다. 기존 JSON·Excel 열 구성과 정책 파일은 변경하지 않습니다. 검증 실패는 적절한 보류·재검증 대상으로 유지하고 기존 판정은 자동 변경하지 않습니다.
 
 관련 코드·한계·재개·테스트: `src/k_melloddy/db_select/archive_review.README.md`, `src/k_melloddy/db_select/dataset_verifier.README.md`. 회귀 검증: `python -m pytest tests/test_constant_drug_caption.py tests/test_docx_material.py tests/test_archive_review.py tests/test_select.py tests/test_verified_select.py tests/test_projection_streaming.py -q` — 84개 통과. 과거 중단 테스트의 오류 주입 대상도 실제 누적 JSON 작성 함수인 `atomic_json`에 맞췄습니다.
+
+
+## Supplementary CSV structure verification (2026-11-09)
+
+An explicitly selected CSV member inside a captured ZIP can be inspected through `archive_selections` using its exact member path, `sheet: null` and a one-based header row. Parent and member hashes, actual headers and sampled rows remain auditable; no network request, code execution, column synthesis or implicit row-order join occurs. Invalid UTF-8, quoting, widths, headers or formula cells fail validation. Sample structure does not establish whole-file completeness, compound counts, independence or cross-file links. Resume reuses immutable captured bytes. See `src/k_melloddy/db_select/archive_review.README.md` for limits and commands. The related archive/DOCX/verified-workflow tests and decision/projection/caption tests passed 92 cases in two offline groups; existing Windows pytest temporary-directory cleanup warnings occurred after successful exit.
