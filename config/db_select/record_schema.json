@@ -1,0 +1,240 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "collect_run_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "data_observations": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence_id",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "public_status": {
+            "enum": [
+              "unknown",
+              "reported_public",
+              "verified_public",
+              "restricted",
+              "not_public"
+            ]
+          },
+          "relationship": {
+            "enum": [
+              "reuse",
+              "new",
+              "derived",
+              "unknown"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verification_level": {
+            "enum": [
+              "mentioned",
+              "landing_page",
+              "sample_structure",
+              "metadata_structure",
+              "full_file",
+              "unverified"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "relationship",
+          "public_status",
+          "verification_level",
+          "url",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "datasets": {
+      "type": "array"
+    },
+    "evidence_ref": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "final": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "excluded",
+            "pending",
+            "fetch_error",
+            "unreviewed"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "code",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "fulltext": {
+      "type": "object"
+    },
+    "initial_review_valid": {
+      "type": "boolean"
+    },
+    "metadata_verification": {
+      "type": "object"
+    },
+    "organ": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "paper_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "pmid": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "processing_state": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "model_name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "model_provider": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "organ_policy_version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "policy_sha256": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "prompt_version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "review_timestamp": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "organ_policy_version",
+        "policy_sha256",
+        "prompt_version",
+        "model_provider",
+        "model_name",
+        "review_timestamp"
+      ],
+      "type": "object"
+    },
+    "public_data_status": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "revalidation": {
+      "type": "object"
+    },
+    "revision": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "run_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "1.0"
+      ]
+    },
+    "source_databases": {
+      "type": "array"
+    },
+    "source_record": {
+      "type": "object"
+    },
+    "tiab": {
+      "type": "object"
+    },
+    "verified_metadata": {
+      "type": "object"
+    },
+    "workflow_version": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "collect_run_id",
+    "paper_id",
+    "pmid",
+    "organ",
+    "tiab",
+    "fulltext",
+    "final",
+    "datasets",
+    "source_databases",
+    "revalidation",
+    "provenance",
+    "initial_review_valid",
+    "evidence_ref",
+    "source_record",
+    "revision"
+  ],
+  "type": "object"
+}

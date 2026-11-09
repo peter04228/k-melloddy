@@ -1,0 +1,325 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "enum": [
+        "",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "P01",
+        "P02",
+        "P03",
+        "P04"
+      ]
+    },
+    "conditions": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_data": {
+          "type": "boolean"
+        },
+        "direct_path": {
+          "type": "boolean"
+        },
+        "independent": {
+          "type": "boolean"
+        },
+        "relevance": {
+          "type": "boolean"
+        },
+        "structure": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "relevance",
+        "actual_data",
+        "direct_path",
+        "structure",
+        "independent"
+      ],
+      "type": "object"
+    },
+    "data_observations": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence_id",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "public_status": {
+            "enum": [
+              "unknown",
+              "reported_public",
+              "verified_public",
+              "restricted",
+              "not_public"
+            ]
+          },
+          "relationship": {
+            "enum": [
+              "reuse",
+              "new",
+              "derived",
+              "unknown"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verification_level": {
+            "enum": [
+              "mentioned",
+              "landing_page",
+              "sample_structure",
+              "metadata_structure",
+              "full_file",
+              "unverified"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "relationship",
+          "public_status",
+          "verification_level",
+          "url",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "datasets": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "compound_count": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "direct_url": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "drug_identifier": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "endpoint": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "evidence_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence_id",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "feature_count": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "identity": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "independence_reason": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value_field": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "version": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "identity",
+          "version",
+          "direct_url",
+          "evidence_id",
+          "drug_identifier",
+          "endpoint",
+          "value_field",
+          "independence_reason",
+          "evidence_refs",
+          "feature_count",
+          "compound_count"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "quote": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_id",
+          "quote"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "next_verification_action": {
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "source_databases": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence_id",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "url": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "confirmed",
+        "excluded",
+        "pending"
+      ]
+    },
+    "what_confirmed": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "what_unresolved": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "code",
+    "reason",
+    "evidence_refs",
+    "conditions",
+    "datasets",
+    "what_confirmed",
+    "what_unresolved",
+    "next_verification_action",
+    "source_databases"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,42 @@
+# Batch review and range-named Excel
+
+Inputs: a UTF-8/BOM CSV accepted by spreadsheet_workflow, an organ policy, batch_size (default 1500), a distinct run root and a publication folder. Validate the **whole input** first: original numbers must be consecutive 1..N, PMIDs unique, and rows correctly shaped. Reject gaps and duplicates; never renumber. Freeze original bytes, SHA256, policy SHA256, the plan, and each subset's raw columns. The last batch may contain fewer papers.
+
+Outputs: one final workbook per completed range, e.g. DB_Select_00001-01500.xlsx, DB_Select_01501-03000.xlsx. Each workbook has the same five sheets, headers and columns, and contains only papers in that range. The confirmed-DB sheet counts datasets separately and can contain more than one dataset per paper. No workbook grows by appending later batches. Execution remains in src/k_melloddy; run folders contain inputs, state, audit documents and outputs.
+
+Algorithm: process the first unfinished batch using SpreadsheetWorkflow. Within it, each paper completes Step 0/1/2/3 and SQLite save before the next. A completed batch's verified export is frozen, copied under its range filename, and recorded before the next batch starts. This preserves bounded per-workbook size without revising the existing scientific screening rules. Missing Title OR Abstract still excludes immediately; reasons remain Korean. Preparation does not select candidates or generate scientific decisions. The external LLM provider remains unconfigured.
+
+States: planned, AWAITING_REVIEW/PARTIAL inside a batch, staged publication, completed publication, overall COMPLETED. Review input pauses block progression. Errors propagate; a failed copy blocks the next batch. Only all completed batches give overall COMPLETED. batch_progress.json reports completed batches/papers and their confirmed/excluded/pending counts, plus a separately identified unfinished batch. Unreviewed papers are never synthesized as exclusions or P codes.
+
+Progress fields distinguish publication from scientific work: completed_papers counts papers in published complete batches; processed_papers also includes terminal_in_current_batch. saved_in_current_batch may include a first-pass P decision still awaiting deep review, and must not be treated as a terminal decision count. current_batch_counts reports only terminal scientific outcomes. Unknown legacy counts stay null rather than being inferred from saved_count. Tests cover a saved initial P02 with zero terminal papers.
+
+Units: batch size counts **papers**, not datasets, Excel rows over all sheets, URL requests or review attempts. Original IDs remain global (the second batch starts at 1501, not 1). Each batch retains its own authoritative SQLite and three cumulative JSON files. Published JSON and stage/round PRISMA live under Batches/START-END/. Final ranges cover all original IDs exactly once. Per-batch JSON, PRISMA and Excel counts agree; sums of completed batches account for completed papers. There is no conflicting monolithic final Excel.
+
+Audit and validation: immutable plan and subset references bind the original source, policy and selected identities. Before publication verify the existing export manifest, every artifact hash, complete counts, sorted source number/PMID pairs, and the JSON counts. The underlying exporter verifies all five workbook sheets/cells against committed SQLite, dataset links and stage PRISMA. The range publication manifest maps each delivered file to its SHA256 and state_root. source_export_manifest.json retains the original exporter paths in that state namespace. Previous research and publications are never overwritten.
+
+Retries/resume: each batch uses the existing network retries, code-specific bounded P revalidation, per-paper checkpoints and exact-answer hashes. Repeat the same command with the same source/root/policy to resume the unfinished batch. Completed ranges are validated and reused without new review or workbook generation. Publication bytes are staged before copying: even a crash between file copies and the completed marker resumes the exact same bytes. Changed source, batch size or policy requires a new root. Published collisions with different bytes fail instead of replacing earlier results.
+
+Prepare only (no HTTP, no LLM, no Excel creation):
+
+```powershell
+.\.venv\Scripts\python.exe -m k_melloddy.db_select.batch_workflow --source "간독성_논문목록화_15860.csv" --root projects/Liver/DB_Select/Runs/csv-15860-batch1500-20261107 --organ Liver --batch-size 1500 --prepare-only --publish projects/Liver/DB_Select/Output/2026-11-07/liver-15860-batch1500
+```
+
+Execute/resume by omitting --prepare-only. Add --render for existing workbook previews. Explicit TI/AB entries belong to each Batches/RANGE/Input/session_review.json; evidence-bound requests/answers remain in Batches/RANGE/Runs/review/reviews/. Missing answers stop execution for the same paper. Do not insert fabricated or fixture answers into a research run.
+
+Tests: `python -m pytest tests/test_batch_workflow.py tests/test_spreadsheet_workflow.py tests/test_spreadsheet_publication.py tests/test_full_workflow.py`. Offline coverage includes 1500-boundary/tail partitioning, preserved IDs, global duplicate/gap rejection, immutable preparation, incomplete-review blocking, staged-publication recovery and refusal of identity/hash/count changes. Tests use temporary synthetic inputs and do not review real research records.
+
+Limitations: splitting Excel does not resolve publisher access, scientific uncertainty or memory use in a single 1500-paper batch. Each range's screening/evidence/history JSON is cumulative within that range; the top-level plan/progress reconciles all ranges. Inner run exporters retain their fixed DB_Select_Final.xlsx alias and immutable snapshots; the user-facing publication folder contains the range-named workbooks. Preparing 11 batches does not mean 15,860 papers have been reviewed. Existing small-run commands retain their behavior.
+
+
+## Per-paper progress Excel (2026-11-09)
+Inputs: the frozen batch source and latest SQLite revisions; IDs and source values remain unchanged. Outputs: `Output/2026-11-07/liver-15860-batch1500/In_Progress/DB_Select_00001-01500.xlsx` and its `.progress.json` manifest. Other batches use their original number range. Five sheets and the existing headers remain fixed.
+
+Algorithm/states: finish one paper, including immediate code-specific deep revalidation if required; commit SQLite and cumulative JSON/PRISMA; rebuild and verify the progress Excel; only then enter the next paper. The first sheet retains the complete batch input, with unfinished papers explicitly marked `미검수` / `검수 대기`. These rows are not final pending decisions. Terminal included + excluded + pending equals `processed_papers`; batch scope also includes unreviewed rows. Progress files are `IN_PROGRESS`, `downstream_ready=false`, and are replaceable projections, not finalized publications.
+
+Audit/units: immutable per-update manifests under `Runs/review/progress_excel` bind source, policy, template, paper IDs, PMIDs, revisions, timestamps and workbook SHA-256. Counts are papers, never requests or retry attempts. SQLite revisions and events remain append-only. Existing finalized publications are preserved.
+
+Validation/retries/resume: read back all five sheets, header order, values, identities, data links and counts before atomic replacement. Retry a locked workbook; if still blocked, stop before the next paper and retain the committed result and pending workbook bytes. Resume flushes this projection first, without repeating scientific review. Unknown user edits to the progress workbook are preserved and block replacement. A successful final batch still requires all normal final QC and immutable publication checks.
+
+Commands: resume the existing `python -m k_melloddy.db_select.batch_workflow --source INPUT.csv --root RUN_ROOT --publish OUTPUT_ROOT --organ Liver --batch-size 1500`; this invokes the progress hook automatically. Offline tests: `python -m pytest tests/test_progress_excel.py tests/test_batch_workflow.py tests/test_full_workflow.py -q`. Tests cover sequential save-before-next, interruption, lock failure, cached resume, manual edits and unchanged finalized records. Limitations: rebuilding Excel needs the artifact-tool runtime; manual scientific review requires actual reviewer answers. Progress Excel is not a completed batch or an unattended LLM service.
+

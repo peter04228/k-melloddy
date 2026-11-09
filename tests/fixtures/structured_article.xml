@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation>
+      <PMID>123</PMID>
+      <Article>
+        <Journal><JournalIssue><Volume>12</Volume><Issue>3</Issue><PubDate><Year>2020</Year><Month>Jan</Month></PubDate></JournalIssue><Title>Synthetic journal</Title></Journal>
+        <ArticleTitle>Mixed <i>title</i> markup</ArticleTitle>
+        <Abstract><AbstractText Label="METHODS" NlmCategory="METHODS">A, B and <b>C</b>.</AbstractText><AbstractText Label="RESULTS">Line one.
+Line two.</AbstractText></Abstract>
+        <AuthorList><Author><LastName>Example</LastName><ForeName>A</ForeName><AffiliationInfo><Affiliation>Test lab</Affiliation></AffiliationInfo></Author><Author><CollectiveName>Test group</CollectiveName></Author></AuthorList>
+        <Language>eng</Language><PublicationTypeList><PublicationType UI="D016428">Journal Article</PublicationType></PublicationTypeList>
+        <GrantList><Grant><GrantID>TEST-1</GrantID><Agency>Synthetic</Agency></Grant></GrantList>
+      </Article>
+      <OtherAbstract Type="Publisher"><AbstractText>Additional abstract.</AbstractText></OtherAbstract>
+      <MeshHeadingList><MeshHeading><DescriptorName UI="D000001" MajorTopicYN="Y">Synthetic term</DescriptorName></MeshHeading></MeshHeadingList>
+      <KeywordList Owner="NOTNLM"><Keyword MajorTopicYN="N">test</Keyword></KeywordList>
+    </MedlineCitation>
+    <PubmedData><ArticleIdList><ArticleId IdType="doi">10.1234/example</ArticleId><ArticleId IdType="pmc">PMC123</ArticleId></ArticleIdList></PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

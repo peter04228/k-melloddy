@@ -1,0 +1,390 @@
+{
+  "type": "object",
+  "properties": {
+    "organ": {
+      "type": "string",
+      "minLength": 1
+    },
+    "organ_ko": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "synonyms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "endpoints": {
+      "type": [
+        "array",
+        "object"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "applicable": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "not_applicable": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "ambiguous": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "candidate_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E01_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E02_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "data_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "clinically_validated": {
+      "enum": [
+        false
+      ]
+    },
+    "database_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "repository_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "compound_identifiers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "experimental_metadata": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "inclusion_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "data_file_formats": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "decision_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E03_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E04_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E05_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E06_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E07_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "E08_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "P01_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "P02_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "P03_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "P04_examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "pending_revalidation": {
+      "type": "object",
+      "properties": {
+        "P01": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "P02": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "P03": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "P04": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "P01",
+        "P02",
+        "P03",
+        "P04"
+      ],
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object"
+    },
+    "verification": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "exclusion_codes": {
+      "type": "object",
+      "properties": {
+        "E01": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E02": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E03": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E04": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E05": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E06": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E07": {
+          "type": "string",
+          "minLength": 1
+        },
+        "E08": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08"
+      ],
+      "additionalProperties": false
+    },
+    "pending_codes": {
+      "type": "object",
+      "properties": {
+        "P01": {
+          "type": "string",
+          "minLength": 1
+        },
+        "P02": {
+          "type": "string",
+          "minLength": 1
+        },
+        "P03": {
+          "type": "string",
+          "minLength": 1
+        },
+        "P04": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "P01",
+        "P02",
+        "P03",
+        "P04"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "organ",
+    "organ_ko",
+    "version",
+    "scope",
+    "keywords",
+    "synonyms",
+    "endpoints",
+    "applicable",
+    "not_applicable",
+    "ambiguous",
+    "candidate_examples",
+    "E01_examples",
+    "E02_examples",
+    "clinically_validated"
+  ],
+  "additionalProperties": false
+}

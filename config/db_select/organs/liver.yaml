@@ -1,0 +1,192 @@
+# K-MELLODDY / DB_Select organ configuration
+# Version: liver-v4 (liver-v3 criteria + explicit workflow)
+# Keywords and endpoint examples are evidence cues, NEVER exclusion filters.
+organ: liver
+organ_ko: 간
+version: liver-v4
+clinically_validated: false
+scope: >-
+  약물·외인성 화합물 유발 간독성, 간세포 손상 및 독성 기전의
+  측정·분석·예측 자료를 조사한다. 최종 확정은 독립적으로 접근하여
+  재사용할 수 있는 화합물별 공개 간독성 데이터에 한한다.
+
+keywords:
+  - hepatotoxicity
+  - drug-induced liver injury
+  - DILI
+  - liver injury
+  - hepatocellular injury
+  - drug-induced cholestasis
+  - drug-induced hepatic dysfunction
+  - acute liver failure
+  - hepatic toxicity
+  - hepatocyte injury
+  - hepatocyte necrosis
+synonyms:
+  - hepatotoxic
+  - liver toxicity
+  - hepatic injury
+  - hepatic dysfunction
+  - drug-induced hepatotoxicity
+  - chemical-induced liver injury
+  - compound-induced hepatotoxicity
+  - drug-induced hepatic injury
+  - cholestatic liver injury
+  - hepatocellular damage
+
+endpoints:
+  liver_function: [ALT, AST, ALP, GGT, GLDH, CK-18, miR-122, bilirubin, bile acids, albumin, PT/INR, liver weight, histopathology, histopathology scores]
+  cellular_injury: [hepatocyte viability, cell viability, cytotoxicity, LDH release, apoptosis, necrosis, caspase activity, TUNEL, ferroptosis]
+  oxidative_stress: [oxidative stress, ROS, GSH, GSSG, GSH/GSSG ratio, MDA, lipid peroxidation, 4-HNE, 8-OHdG, Nrf2 pathway activity]
+  mitochondrial: [ATP, ATP depletion, mitochondrial dysfunction, mitochondrial membrane potential, mitochondrial ROS, oxygen consumption rate, OCR, respiratory chain activity, cytochrome c release, mtDNA-related measurements]
+  er_stress: [ER stress, unfolded protein response, UPR]
+  inflammation: [TNF-alpha, IL-1beta, IL-6, NF-kappaB, NLRP3]
+  cholestasis: [bile acid concentration, intracellular bile acid accumulation, BSEP inhibition, NTCP transport activity, MRP2 transport, cholestatic injury]
+  metabolism: [CYP enzyme activity, CYP2E1, CYP3A4, UGT, SULT, GST, reactive metabolite formation, NAPQI, drug bioactivation, GSH conjugation, detoxification capacity]
+  classification: [DILI label, DILI classification, DILI severity label, hepatotoxicity risk score, drug-specific toxicity label, drug-induced liver injury occurrence]
+
+database_keywords:
+  - database
+  - dataset
+  - repository
+  - open data
+  - public data
+  - high-throughput screening
+  - chemical library
+  - compound library
+  - machine learning
+  - artificial intelligence
+  - QSAR
+  - prediction model
+
+applicable:
+  - 약물·외인성 화합물 노출에 따른 간손상 및 기능 이상 평가
+  - 약물별 정량 측정값·독성 라벨·위험점수 분석
+  - 간세포 생존율·산화스트레스·미토콘드리아·담즙정체 연구
+  - 독성 대사산물과 간손상 사이의 기전적 연관성 연구
+  - DILI QSAR·ML·QST·PBPK-QST 및 약물감시 연구
+  - 약물 노출과 간독성 관련성을 확인할 수 있는 임상·Omics 연구
+  - 독립적으로 재사용 가능한 신규·통합·큐레이션 데이터 공개
+not_applicable:
+  - 비약물성 MASLD/MASH·바이러스성 간염·간경변·유전질환의 자연사
+  - 간암 진단·예후·영상 AI만 수행한 연구
+  - 약물의 치료 효능·약동학·혈중 농도만 평가한 연구
+  - 간손상 관련성이 없는 CYP·대사효소·수송체 분석
+  - 항암제의 간암세포 사멸 효과만 평가한 연구
+  - 서론에서만 간독성을 언급한 연구
+ambiguous:
+  - 약물 노출과 간손상의 연결이 불명확함
+  - CYP·ROS·GSH·Nrf2 변화와 간독성의 연결이 불명확함
+  - 항암 효능과 간독성 세포손상을 구별할 근거가 부족함
+  - Omics 데이터의 약물 노출 조건·독성 관련성이 불명확함
+  - 공개 데이터가 언급되지만 실제 접근 및 재사용 가능성이 미검증임
+
+# Descriptions, not keyword triggers. A code is valid only after its evidence requirements.
+exclusion_codes:
+  E01: 약물·화합물 유발 간독성 연구가 아님
+  E02: 약물 연구이나 간독성을 실제 평가하지 않음
+  E03: Review·메타분석에서 신규 독립 공개 독성 데이터가 없음
+  E04: 실험·기전 연구에서 재사용 가능한 공개 독성 데이터가 없음
+  E05: 임상·환자 연구에서 독립 공개 데이터가 없음
+  E06: ML·QSAR·QST 연구에서 재사용 가능한 입력·관측 독성 데이터가 없음
+  E07: 기존 공개 DB 재사용만 하고 신규 독립 공개 자료가 없음
+  E08: 검증 완료 후에도 기타 사유로 재사용 가능한 구조화 독성 데이터가 없음
+pending_codes:
+  P01: 데이터 존재 단서가 있으나 직접 접근 경로가 미확인됨
+  P02: 원문·Supplementary 접근 제한으로 공개 여부 판단이 불가능함
+  P03: 파일·Repository 위치는 확인했으나 실제 파일 검증이 미완료됨
+  P04: 공개 파일은 있으나 간독성 연결성 또는 데이터 구조가 불명확함
+
+candidate_examples:
+  - 다수 약물의 ALT·AST·세포 생존율·ROS를 평가한 연구
+  - DILI 라벨을 구성하거나 간독성 예측 QSAR을 구축한 연구
+  - 약물 처리 간세포 Omics·BSEP·미토콘드리아 데이터를 구축한 연구
+E01_examples: [약물 노출 없는 MASLD 자연사 연구, 약물 독성 평가 없는 간암 예후 연구]
+E02_examples: [간질환 치료 효능만 평가, CYP3A4 활성만 측정, 항암제의 간암세포 사멸만 분석]
+E03_examples: [독립적 데이터 공개 없는 간독성 Review, 재사용 가능한 원자료 없는 DILI 메타분석]
+E04_examples: [본문 그래프와 요약통계만 있는 간세포 실험, 원자료 공개 없는 GSH·ROS 연구]
+E05_examples: [환자 원자료 비공개이고 별도 분석 데이터 없음, 집계 ALT·AST 값만 공개]
+E06_examples: [GitHub 코드만 공개하고 학습 독성 라벨은 비공개, 성능지표만 공개한 QSAR]
+E07_examples: [FAERS·ChEMBL·GEO 재분석만 하고 새로운 공개 데이터셋은 없음]
+E08_examples: [실제 확인을 마쳤으나 재사용 가능한 구조화 데이터가 없는 기타 연구]
+P01_examples: [Data Availability에 공개를 언급했으나 공식 파일 링크 미확인]
+P02_examples: [합법적인 대체 경로까지 확인했으나 필수 원문·부록 접근 불가]
+P03_examples: [GEO accession·Supplementary 경로는 확인했으나 파일 내용 미검증]
+P04_examples: [CSV는 열리지만 약물 식별자와 독성 변수 연결이 불명확]
+
+pending_revalidation:
+  P01:
+    - Data Availability·Supplementary·공식 Repository 재확인
+    - PMID·DOI·accession으로 접근 경로 재확인
+  P02:
+    - PMC·공식 출판사 및 합법적인 대체 경로 확인
+    - Supplementary 별도 페이지 확인, 시도한 경로 및 실패 기록
+    - DOI 리디렉션 오류 한 번만으로 P02 부여 금지
+  P03:
+    - 공식 accession·파일·API 재확인
+    - 실제 접근과 헤더·파일형식·구조 검증
+  P04:
+    - 데이터 설명서·컬럼명·화합물 식별자 확인
+    - 노출 조건과 간독성 endpoint·라벨 연결성 검증
+
+repository_examples: [GEO, ArrayExpress, BioStudies, MetaboLights, Metabolomics Workbench, ProteomeXchange, PRIDE, GitHub, Zenodo, Figshare, Dryad, OSF, ChEMBL, PubChem BioAssay]
+data_file_formats: [csv, xlsx, xls, tsv, txt, zip, json, xml, parquet, h5, h5ad, API]
+compound_identifiers: [drug_name, compound_name, drug_id, pubchem_cid, chembl_id, cas_number, smiles, inchikey]
+experimental_metadata: [dose, concentration, exposure_duration, sampling_time, time_series, dose_response, species, cell_type, tissue_type, control_group, replicates, measurement_units, experimental_conditions]
+
+inclusion_requirements:
+  - 약물·외인성 화합물에 의한 간독성 또는 독성 기전과 관련됨
+  - 화합물별 관측값·측정값·독성 라벨 또는 재사용 가능한 자료가 있음
+  - 합법적인 공개 접근 경로가 확인됨
+  - 파일 또는 API 접근이 실제 검증됨
+  - 파일 내용·자료구조·공식 메타데이터로 독성 관련성을 확인함
+  - 화합물 식별자와 관측값의 연결성을 추적할 수 있음
+
+# Explicit processing contract; code must implement these transitions.
+workflow:
+  step_0:
+    name: tiab_presence
+    require_title_and_abstract: true
+    if_any_missing:
+      status: excluded
+      reason: TI/AB 부재
+      code: null
+    else: step_1
+  step_1:
+    name: tiab_relevance
+    evidence_source: title_and_abstract_only
+    allowed_exclusion_codes: [E01, E02]
+    outcomes:
+      irrelevant: {status: excluded, next: stop}
+      relevant: {status: candidate, next: step_2}
+      insufficient_information: {status: pending_screening, next: step_2}
+    rules:
+      - 이 단계에서 공개 DB 부재를 추정하여 E03~E08로 제외하지 않는다
+      - 이 단계에서 최종 확정을 하지 않는다
+  step_2:
+    name: dataset_eligibility
+    allowed_exclusion_codes: [E03, E04, E05, E06, E07, E08]
+    allowed_pending_codes: [P01, P02, P03, P04]
+    outcomes:
+      requirements_verified: {status: confirmed, next: stop}
+      negative_evidence_verified: {status: excluded, next: stop}
+      insufficient_evidence: {status: pending, next: step_3}
+    rules:
+      - 실제 자료 확인을 수행하지 않은 경우 확인·다운로드 완료로 기록하지 않는다
+      - 증거 미확보·접근 실패와 데이터 부재의 입증은 다르다
+      - 확인되지 않은 데이터 접근 링크나 파일 구조를 추정하지 않는다
+  step_3:
+    name: pending_revalidation
+    input_codes: [P01, P02, P03, P04]
+    use_rules_from: pending_revalidation
+    outcomes:
+      requirements_verified: confirmed
+      negative_evidence_verified: excluded
+      evidence_still_insufficient: final_pending
+    max_automatic_revalidation_rounds: 1
+    rules:
+      - P 코드 재검증 시도를 로그에 남기고 무한 재시도를 방지한다
+      - 최종 보류를 자동으로 제외로 바꾸지 않는다
+      - 확정은 모든 inclusion_requirements 검증 후에만 허용한다
+
+verification:

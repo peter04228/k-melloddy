@@ -1,0 +1,249 @@
+(
+    "Chemical and Drug Induced Liver Injury"[Mesh]
+    OR "Liver Diseases, Drug-Induced"[Mesh]
+    OR hepatotoxicity[tiab]
+    OR "liver toxicity"[tiab]
+    OR "hepatic toxicity"[tiab]
+    OR "drug-induced liver injury"[tiab]
+    OR DILI[tiab]
+    OR "drug-induced hepatotoxicity"[tiab]
+    OR "liver injury"[tiab]
+    OR "hepatic injury"[tiab]
+    OR "drug-induced cholestasis"[tiab]
+
+    OR "hepatocellular injury"[tiab]
+    OR "hepatocellular damage"[tiab]
+    OR "cholestatic injury"[tiab]
+    OR "hepatic dysfunction"[tiab]
+    OR "impaired hepatic function"[tiab]
+    OR "hepatic synthetic dysfunction"[tiab]
+    OR "impaired hepatic synthetic function"[tiab]
+    OR "histopathological liver injury"[tiab]
+    OR "liver enlargement"[tiab]
+    OR "relative liver weight"[tiab]
+    OR "liver weight change"[tiab]
+    OR "hepatic inflammatory response"[tiab]
+    OR "hepatocyte apoptosis"[tiab]
+    OR "hepatic fibrosis"[tiab]
+    OR "hepatocyte proliferation"[tiab]
+    OR "hepatocyte regeneration"[tiab]
+
+    OR
+    (
+        (
+            liver[tiab]
+            OR hepatic[tiab]
+            OR hepatocyte*[tiab]
+            OR hepatocellular[tiab]
+            OR cholestasis[tiab]
+        )
+        AND
+        (
+            "oxidative injury"[tiab]
+            OR "oxidative stress"[tiab]
+            OR "lipid peroxidation"[tiab]
+            OR "mitochondrial dysfunction"[tiab]
+            OR "mitochondrial injury"[tiab]
+            OR "energy failure"[tiab]
+            OR "inflammatory injury"[tiab]
+            OR "cell death"[tiab]
+            OR apoptosis[tiab]
+            OR "ER stress"[tiab]
+            OR "endoplasmic reticulum stress"[tiab]
+            OR "unfolded protein response"[tiab]
+            OR "fibrotic response"[tiab]
+            OR regeneration[tiab]
+
+            OR ALT[tiab]
+            OR AST[tiab]
+            OR GLDH[tiab]
+            OR "glutamate dehydrogenase"[tiab]
+            OR "CK-18"[tiab]
+            OR "cytokeratin 18"[tiab]
+            OR "miR-122"[tiab]
+            OR "microRNA-122"[tiab]
+
+            OR ALP[tiab]
+            OR GGT[tiab]
+            OR bilirubin[tiab]
+            OR "bile acid"[tiab]
+            OR "bile acids"[tiab]
+            OR "total bile acid"[tiab]
+            OR "total bile acids"[tiab]
+
+            OR albumin[tiab]
+            OR "total protein"[tiab]
+            OR "prothrombin time"[tiab]
+            OR "PT prolongation"[tiab]
+
+            OR histopathology[tiab]
+            OR histopathological[tiab]
+            OR "liver histology"[tiab]
+            OR "liver weight"[tiab]
+
+            OR ROS[tiab]
+            OR "reactive oxygen species"[tiab]
+            OR MDA[tiab]
+            OR malondialdehyde[tiab]
+            OR LPO[tiab]
+            OR "4-HNE"[tiab]
+            OR "4-hydroxynonenal"[tiab]
+            OR "8-OHdG"[tiab]
+            OR "8-hydroxy-2-deoxyguanosine"[tiab]
+
+            OR ATP[tiab]
+            OR "cytochrome c"[tiab]
+            OR mtDNA[tiab]
+            OR "mitochondrial DNA"[tiab]
+
+            OR "TNF-alpha"[tiab]
+            OR "tumor necrosis factor"[tiab]
+            OR "IL-1beta"[tiab]
+            OR "IL-6"[tiab]
+            OR "NF-kappa B"[tiab]
+            OR NFkB[tiab]
+            OR NLRP3[tiab]
+
+            OR "caspase-3"[tiab]
+            OR caspase3[tiab]
+            OR TUNEL[tiab]
+            OR "Bcl-2"[tiab]
+
+            OR GRP78[tiab]
+            OR CHOP[tiab]
+            OR "eIF2alpha"[tiab]
+            OR "p-eIF2alpha"[tiab]
+            OR XBP1[tiab]
+            OR ATF6[tiab]
+
+            OR "TGF-beta"[tiab]
+            OR "transforming growth factor beta"[tiab]
+            OR "hyaluronic acid"[tiab]
+            OR osteopontin[tiab]
+            OR OPN[tiab]
+
+            OR PCNA[tiab]
+            OR "Ki-67"[tiab]
+        )
+    )
+)
+AND
+(
+    (
+        database*[tiab]
+        OR dataset*[tiab]
+        OR "data set*"[tiab]
+        OR repositor*[tiab]
+        OR registry[tiab]
+        OR registries[tiab]
+        OR compendium*[tiab]
+        OR "knowledge base*"[tiab]
+        OR knowledgebase*[tiab]
+        OR benchmark*[tiab]
+        OR "data resource*"[tiab]
+        OR "data source"[tiab]
+        OR "data sources"[tiab]
+        OR "structured resource"[tiab]
+        OR "structured resources"[tiab]
+        OR "curated database*"[tiab]
+        OR "curated dataset*"[tiab]
+
+        OR "training data"[tiab]
+        OR "training set"[tiab]
+        OR "training sets"[tiab]
+        OR "training dataset"[tiab]
+        OR "training datasets"[tiab]
+        OR "validation set"[tiab]
+        OR "validation sets"[tiab]
+        OR "test set"[tiab]
+        OR "test sets"[tiab]
+
+        OR
+        (
+            "reference list*"[tiab]
+            AND
+            (
+                drug*[tiab]
+                OR compound*[tiab]
+            )
+        )
+
+        OR "publicly available"[tiab]
+        OR "freely available"[tiab]
+        OR "openly available"[tiab]
+        OR "public data"[tiab]
+        OR "open data"[tiab]
+
+        OR "Databases, Factual"[Mesh]
+        OR "Datasets as Topic"[Mesh]
+
+        OR accession*[tiab]
+        OR GitHub[tiab]
+        OR Zenodo[tiab]
+        OR Figshare[tiab]
+        OR Dryad[tiab]
+
+        OR
+        (
+            (
+                "high-throughput screen*"[tiab]
+                OR "high throughput screen*"[tiab]
+                OR "large-scale screen*"[tiab]
+                OR "large scale screen*"[tiab]
+            )
+            AND
+            (
+                compound*[tiab]
+                OR molecule*[tiab]
+                OR chemical*[tiab]
+                OR drug*[tiab]
+            )
+        )
+
+        OR
+        (
+            (
+                "chemical librar*"[tiab]
+                OR "compound librar*"[tiab]
+                OR "small-molecule librar*"[tiab]
+                OR "small molecule librar*"[tiab]
+                OR "compound collection*"[tiab]
+                OR "chemical collection*"[tiab]
+            )
+            AND
+            (
+                screen*[tiab]
+                OR assay*[tiab]
+                OR measurement*[tiab]
+                OR electrophysiolog*[tiab]
+            )
+            AND
+            (
+                compound*[tiab]
+                OR molecule*[tiab]
+                OR chemical*[tiab]
+            )
+        )
+    )
+
+    OR
+
+    (
+        "Machine Learning"[Mesh]
+        OR "Artificial Intelligence"[Mesh]
+        OR "Quantitative Structure-Activity Relationship"[Mesh]
+        OR "machine learning"[tiab]
+        OR "deep learning"[tiab]
+        OR "artificial intelligence"[tiab]
+        OR QSAR[tiab]
+        OR "quantitative structure-activity relationship"[tiab]
+        OR "quantitative structure-activity relationships"[tiab]
+        OR "prediction model"[tiab]
+        OR "prediction models"[tiab]
+        OR "predictive model"[tiab]
+        OR "predictive models"[tiab]
+        OR "predictive modeling"[tiab]
+        OR "predictive modelling"[tiab]
+        OR "model training"[tiab]
+    )
+)

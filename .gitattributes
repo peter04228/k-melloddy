@@ -1,0 +1,2 @@
+# Policies are hash-bound to saved scientific runs. Preserve exact bytes on clone.
+* -text

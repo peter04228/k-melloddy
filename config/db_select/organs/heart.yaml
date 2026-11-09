@@ -1,0 +1,29 @@
+organ: heart
+organ_ko: 심장
+version: heart-v1
+scope: 약물·화합물 유발 심장 독성의 실제 측정·분석·예측 자료
+keywords: &id001
+- cardiotoxicity
+- cardiac toxicity
+synonyms: *id001
+endpoints:
+- QT/QTc
+- hERG inhibition
+- cardiomyocyte viability
+- cardiac injury
+applicable:
+- 약물별 심장 독성 측정값/라벨 또는 재사용 가능한 관측 입력자료
+not_applicable:
+- 독성 평가가 없는 치료 효능 연구
+- 약물/화합물 유발 독성이 아닌 연구
+ambiguous:
+- 초록에서 약물 독성 endpoint가 불명확하면 구체적 관련성 근거와 함께 Full Text 검수
+candidate_examples:
+- 여러 약물에 대한 QT/QTc 자료를 측정하고 공개한 연구
+E01_examples:
+- 약물/화합물과 무관한 질병 자연사 연구
+E02_examples:
+- 심장 치료 효능만 평가하고 독성을 평가하지 않은 연구
+data_examples:
+- 약물 식별자·독성 endpoint·관측값 또는 라벨이 포함된 공개 테이블/API
+clinically_validated: false

@@ -1,0 +1,119 @@
+import base64
+import io
+import zipfile
+import pytest
+from k_melloddy.db_select.full_workflow_access import inspect_material
+from k_melloddy.db_select.dataset_verifier import verify_dataset
+
+
+def record(xml):
+    stream=io.BytesIO()
+    with zipfile.ZipFile(stream,'w') as z:z.writestr('word/document.xml',xml)
+    return dict(evidence_id='file',status='fetch_error',failure_reason='redirect_or_empty_body_not_article',
+                http_status=200,kind='file',complete_body=True,format='application/octet-stream',
+                url='https://example.org/data.docx',final_url='https://example.org/data.docx',payload_sha256='test',
+                body_sample_b64=base64.b64encode(stream.getvalue()).decode(),text='')
+
+
+XML='''<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+<w:p><w:r><w:t>All subjects exposed to synthetic-drug.</w:t></w:r></w:p>
+<w:tbl><w:tr><w:tc><w:p><w:r><w:t>case</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>ALT</w:t></w:r></w:p></w:tc></w:tr>
+<w:tr><w:tc><w:p><w:r><w:t>1</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>12</w:t></w:r></w:p></w:tc></w:tr></w:tbl>
+</w:body></w:document>'''
+
+
+def test_direct_supplementary_docx_is_inspected_as_file():
+    e=record(XML);e.update(kind='supplementary',status='accessible')
+    original=e['body_sample_b64']
+    result=inspect_material(e)
+    assert result['original_kind']=='supplementary' and result['kind']=='file'
+    assert result['columns']==['case','ALT']
+    assert result['body_sample_b64']==original
+    e=record(XML);e.update(kind='supplementary',status='accessible',complete_body=False)
+    assert inspect_material(e)['kind']=='supplementary'
+
+
+def test_exact_docx_selection_preserves_parent_and_rejects_merges():
+    import copy
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    e=record(XML);e['status']='accessible'
+    e['payload_sha256']=digest(base64.b64decode(e['body_sample_b64']))
+    bundle={'records':[e]};original=copy.deepcopy(bundle)
+    choice={'parent_evidence_id':'file','table_index':0}
+    selected=selected_docx_tables(bundle,[choice])['records'][-1]
+    assert selected['columns']==['case','ALT'] and selected['request_performed'] is False
+    assert bundle==original and selected['parent_evidence_id']=='file'
+    with pytest.raises(ValueError,match='index'):selected_docx_tables(bundle,[dict(choice,table_index=9)])
+    e['body_sample_b64']=base64.b64encode(b'changed').decode()
+    with pytest.raises(ValueError,match='payload'):selected_docx_tables(bundle,[choice])
+    e=record(XML.replace('<w:tc>','<w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr>',1))
+    e['status']='accessible';e['payload_sha256']=digest(base64.b64decode(e['body_sample_b64']))
+    with pytest.raises(ValueError,match='Merged'):selected_docx_tables({'records':[e]},[choice])
+
+
+def test_explicit_docx_row_bound_excludes_footer_without_guessing():
+    from k_melloddy.core.storage import digest
+    from k_melloddy.db_select.archive_review import selected_docx_tables
+    footer='<w:tr><w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:t>Normal range</w:t></w:r></w:p></w:tc></w:tr>'
+    e=record(XML.replace('</w:tbl>',footer+'</w:tbl>'));e['status']='accessible'
+    e['payload_sha256']=digest(base64.b64decode(e['body_sample_b64']))
+    choice={'parent_evidence_id':'file','table_index':0,'row_end':2}
+    result=selected_docx_tables({'records':[e]},[choice])['records'][-1]
+    assert result['columns']==['case','ALT'] and 'Normal range' not in result['text']
+    assert result['body_sample_b64']==e['body_sample_b64']
+    with pytest.raises(ValueError,match='Merged'):
+        selected_docx_tables({'records':[e]},[dict(choice,row_end=3)])
+
+
+def test_docx_download_inspected_without_inventing_drug_column():
+    e=inspect_material(record(XML))
+    assert e['status']=='accessible' and e['columns']==['case','ALT']
+    assert e['sample_row_count']==1 and 'synthetic-drug' in e['text']
+    ref=dict(evidence_id='file',quote='All subjects exposed to synthetic-drug.')
+    d=dict(name='synthetic',identity='url:'+e['url'],version='1',direct_url=e['url'],evidence_id='file',
+           drug_identifier='synthetic-drug',endpoint='ALT',value_field='ALT',independence_reason='fixture',
+           evidence_refs=[ref],feature_count=None,compound_count=None)
+    with pytest.raises(ValueError,match='fields not verified'):verify_dataset(d,{'records':[e]})
+
+
+def test_docx_merged_headers_and_html_are_not_structured_data():
+    merged=XML.replace('<w:tc>','<w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr>',1)
+    assert inspect_material(record(merged))['status']=='fetch_error'
+    e=record(XML);e['status']='access_restricted'
+    assert inspect_material(e)['status']=='access_restricted'
+    e=record(XML);e['body_sample_b64']=base64.b64encode(b'<html>challenge</html>').decode()
+    assert inspect_material(e)['status']=='fetch_error'
+
+
+def test_docx_rejects_xml_entities():
+    xml='<!DOCTYPE x [<!ENTITY x "injected">]>'+XML
+    e=inspect_material(record(xml))
+    assert e['status']=='fetch_error' and 'Unsafe DOCX' in e['structure_failure']
+
+
+def test_xlsx_caption_is_preserved_and_not_used_as_column():
+    from openpyxl import Workbook
+    wb=Workbook();ws=wb.active
+    ws.append(['Synthetic training set',None]);ws.append(['Drug','ALT']);ws.append(['synthetic',2])
+    stream=io.BytesIO();wb.save(stream);wb.close()
+    e=record(XML);e['final_url']='https://example.org/data.xlsx';e['body_sample_b64']=base64.b64encode(stream.getvalue()).decode()
+    result=inspect_material(e)
+    assert result['status']=='accessible' and result['columns']==['Drug','ALT']
+    assert result['workbook_inspection']['header_row']==2 and result['sample_row_count']==1
+    assert 'Synthetic training set' in result['text']
+
+
+def test_xlsx_ambiguous_headers_keep_cells_but_cannot_register_structure():
+    from openpyxl import Workbook
+    wb=Workbook();ws=wb.active
+    ws.append(['Caption',None,None]);ws.append([None,'Arm A','Arm B'])
+    ws.append(['ID','Value','Value']);ws.append(['synthetic',2,3])
+    stream=io.BytesIO();wb.save(stream);wb.close()
+    e=record(XML);e['final_url']='https://example.org/data.xlsx'
+    e['body_sample_b64']=base64.b64encode(stream.getvalue()).decode();e['level']='unverified'
+    result=inspect_material(e)
+    assert result['status']=='accessible'
+    assert result.get('columns',[])==[] and result['level']!='sample_structure'
+    assert result['workbook_preview']['rows'][2]==['ID','Value','Value']
+    assert 'synthetic' in result['text'] and 'structure_failure' in result

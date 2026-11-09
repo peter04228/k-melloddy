@@ -1,0 +1,91 @@
+# Per-paper full workflow
+
+Large-batch progress: AWAITING_REVIEW reports saved_count separately from terminal_count and terminal_outcomes. An initial pending save does not count as completed before bounded deep review. Only reviewed records with terminal=true and auto_retry=false contribute. This is read-only progress over committed SQLite records; it does not add or change scientific decisions. Regression: tests/test_full_workflow.py.
+
+Unfinished reviews reinspect complete DOCX file bytes from cached HTTP evidence using the bounded material parser. New evidence yields a new hash-bound request; old requests, answers and finalized decisions remain intact. This avoids treating a successfully downloaded binary table as empty HTML. Caption drug names are preserved as text, never invented as row columns. Regression coverage: tests/test_docx_material.py and tests/test_full_workflow.py.
+
+The spreadsheet entry point supplies a separately hashed input namespace through `source_scope`; it does not reuse Collect IDs by ordinal. Missing explicit TI/AB responses stop at AWAITING_REVIEW. Optional `web_captures` add hash-bound reviewer excerpts from actual public web-tool observations; they preserve failed direct HTTP attempts and never claim downloaded dataset contents. See `spreadsheet_workflow.README.md` and `web_capture.README.md` for input contracts and tests.
+
+Inputs: immutable parent run's Collect scope, organ policy, explicit session TI/AB proposals and evidence-bound second/deep-review answers. Output: a distinct SQLite run, three cumulative JSON projections, per-transition JSON, checkpoints, comparison results and the existing five-sheet Excel. Unit: paper; registered datasets remain a separate unit.
+
+Algorithm/states: 0 missing TI/AB → source exclusion; 1 E01/E02 → exclusion, candidate/first_pass_pending → 2.1 official metadata and access, 2.2 context extraction, 2.3 material inspection, 2.4 explicit reviewer response, then second decision. Pending papers immediately receive one deep pass before the next paper. Final pending sets auto_retry=false. AWAITING_REVIEW is an internal processing state, not a final P code.
+
+Audit: immutable request/answer references and exact evidence hashes, HTTP timestamps, stage transitions, SQLite revisions, original IDs and source policy. Ordinary provider configuration stays unconfigured. The conversation reviewer submits only actual evidence-backed conclusions; no heuristic final decisions substitute for an LLM response.
+
+Validation: reject modified source/policy, stale answer hashes, unsupported quotes and invented files; reuse existing decision/dataset/Excel validators. Tests: tests/test_full_workflow.py covers absent TI/AB without HTTP, one complete paper before the next, interruption at each review boundary, finite pending retry and structured JSON sampling. Existing tests cover E/P codes, identity mismatches and transport alternatives.
+
+Retries/resume: completed requests and metadata are reused within a paper/pass with their original timestamps. Deep review has a distinct round. SQLite saves are authoritative after interruption. Repeat the command to resume; missing review answers remain pending internally. Finalized publications receive unique snapshot directories and prior outputs remain preserved.
+
+Command: `python -m k_melloddy.db_select.full_workflow --root projects/Liver/DB_Select --organ Liver --parent RUN_ID --session SESSION --review-file INPUT_JSON --render`. Use another organ/root with its own matching policy and reviewer input. Review requests/answers live under `Runs/SESSION/reviews/`; answers must cite the request SHA-256. Never enable a model provider implicitly.
+
+Limitations: network failures and unavailable full texts are recorded, not bypassed. Scanned PDFs require explicit visual review. No guarantee of inclusion, public-data availability or licensing follows from a successful article request. A final pending decision differs from a completed verification of a reusable dataset.
+
+Invalid reviewer schemas or unsupported evidence stop at AWAITING_REVIEW without saving a scientific pending decision. Correct an unconsumed answer only after preserving its rejected version. Tests also exercise this boundary and successful parsing of binary spreadsheet responses previously classified as empty text.
+
+Stage PRISMA projections are in Runs/SESSION/PRISMA/round_N. Each stage uses the latest non-started event per paper in that round; immutable transition files and ledger events retain all attempts. Included counts are a subset of forwarded counts, not an additional term in the input conservation equation.
+
+Additional reviewer-observed routes can extend a cached pass without changing its original evidence. New bundles receive evidence-hash-suffixed review request/answer names; old answers cannot authorize the changed bundle. Invalid or superseded unconsumed answers remain preserved. The per-request cache avoids repeating completed requests. Regression tests verify immutable request versions and that an unanswered new version stops execution.
+# Text transport
+
+When submitting reviewer JSON through Windows PowerShell, serialize non-ASCII characters as JSON Unicode escapes or write UTF-8 directly. Reopen the saved file and check the actual strings before consuming an answer. Shell pipes can replace non-ASCII prose with question marks even when the destination writer uses UTF-8. A later correction must append a reviewed narrative amendment, preserving consumed answers and prior history. Final publication checks must reject unreadable final reasons.
+
+Revalidation carries prior immutable evidence into the new request by evidence ID. A later 403 or expired download URL cannot erase a previously captured file. Carried records are marked reused_from_prior_round; their original response timestamps and content remain unchanged. New attempts and old records coexist. Tests: test_prior_evidence_merge.py.
+
+Downloaded XLSX files preserve a bounded raw-cell preview even when caption, duplicate or missing headers prevent structured-field verification. Opening a workbook proves file access only; columns and sample_structure are granted only after separate header checks. Pending requests re-inspect cached bytes and get a new evidence hash. tests/test_docx_material.py covers ambiguous headers without fabricated columns.
+
+Complete institutional PDF bodies mislabeled as generic binary MIME are re-parsed on unfinished requests. Exact normalized title and verified DOI are required. Original bytes and response classification remain preserved; full-text section review is still explicit. Regression: tests/test_pdf_mime_recovery.py. Reviewer-only corrections may use the existing captured bundle in a new review round without claiming new network attempts.
+
+### Complete multi-table ZIP evidence
+Complete ZIP bytes containing several distinct tables are accessible material, not a transport failure. Each member and schema remain separate; no shared columns, eligibility or full-text review are inferred. Existing immutable caches remain preserved; unfinished review requests receive newly hashed interpretations. Truncated bytes remain unverified. Offline regression: tests/test_archive_access_state.py.
+
+### Observed institutional download links
+A reviewer-observed download can carry a Referer only when its exact URL was captured as a link on that page; cross-origin referers are rejected. HTTP evidence records the referer and caches use a distinct key. A complete PDF mislabeled HTML is parsed from magic bytes; title and official DOI must match (PDF DOI line breaks normalize as whitespace). No access success or full review is inferred from HTTP 200. Original attempts are preserved. Regression commands: pytest tests/test_observed_download_referer.py tests/test_pdf_mime_recovery.py.
+
+### Reviewer-selected nested archive tables
+An evidence_review.archive_selections entry binds a captured parent file, exact member chain, sheet and observed header row. It is parsed before citation validation; derived evidence remains linked to the original and performs no HTTP request. See [archive_review](archive_review.README.md) for limits, states, validation, retries, resume and regression tests. This does not infer endpoint meaning or dataset eligibility.
+
+### Discovery list changes during an unfinished review
+Resume merges hash-verified additional-discovery checkpoints for the same paper and round before checking newly requested URLs. Previously captured records and coverage remain available even if the current discovery list changes. Evidence IDs are deduplicated; original checkpoints and consumed answers remain immutable. Corrupt checkpoints stop review instead of silently dropping evidence. Offline regression: pytest tests/test_prior_evidence_merge.py.
+
+Explicit evidence_review.docx_selections is interpreted before citations alongside archive selections. See archive_review.README.md for exact table/row scope, source-preserving validation, resume and tests. Multi-table DOCX files are never silently flattened.
+
+After all cached records, material interpretations and explicit web captures are merged, extracted_context is rebuilt deterministically. This avoids request-hash changes caused solely by stale context on resume; actual captured evidence is unchanged. Regression: tests/test_prior_evidence_merge.py checks repeat equality and context consistency.
+
+
+## Liver v4 / isolated CSV review
+Inputs: liver-v4 organ YAML and UTF-8 CSV with source numbering. Output: separate run namespace; existing research and finalized artifacts remain unchanged. Grouped endpoints and full organ criteria are passed to evidence-bound review; keywords are never automatic verdicts. Step 0 requires both title and abstract; either missing (including whitespace) excludes immediately with TIAB_ABSENT before Step 1. Step 1 E01/E02 or candidate/uncertain; Step 2 verifies data; Step 3 uses code-specific P tasks with one automatic round. Units: papers and datasets remain separate. Existing transitions, immutable revisions, URL attempts and PRISMA record each state. Resume requires identical source and policy hashes. CSV source is frozen as source.csv; no Excel conversion. Command: python -m k_melloddy.db_select.spreadsheet_workflow --source INPUT.csv --root NEW_RUN --prepare-only. Tests: tests/test_liver_v4_csv.py and existing workflow/decision tests. Limitation: verification: null supplies no additional rules; actual inclusion still requires the existing evidence and file-structure validators. No live review is implied by offline tests.
+
+Access validation correction: Elsevier coredata-only XML is bibliographic metadata even when its journal title contains Methods. Actual XML body/rawtext is required by the body heuristic. Administrative blocked_verification records are not terminal scientific verdicts; resume can append a corrected revision while preserving the failed attempt. Tests: test_response_deadline.py, test_full_workflow.py, test_verified_select.py.
+
+### Strict one-paper completion gate
+The processing unit is one paper, in internal-number ascending order: Step 0 -> Step 1 -> Step 2 -> Step 3 if pending -> SQLite terminal save -> cumulative JSON/PRISMA refresh -> checkpoint -> next paper. Early exclusions skip later scientific review steps. Final pending after bounded revalidation counts as terminal, not as confirmed data. ReviewRequired stops at AWAITING_REVIEW. Failed saves, unfinished retries and blocked verification stop the loop as PARTIAL; they cannot advance to the next paper or publish final Excel. Resume checks the saved terminal state and continues the unfinished paper; existing completed records remain unchanged. No batch-wide Step 1 or deferred pending sweep is used by this entry point. Audit events, input contracts, units and commands remain as above. Offline tests: pytest tests/test_full_workflow.py (review pauses, resume idempotence, terminal gate and failed-save loop blocking). This change does not rerun or replace existing research outputs.
+
+
+2026-11-07 metadata recovery: unverified transport caches are preserved and recovery attempts use separate immutable official_metadata_recovery checkpoints. Verified responses remain reusable; a failed checkpoint cannot permanently block a later authorized network retry. Review failures still stop before advancing papers. Tests exercise retry preservation and successful-cache reuse.
+
+Complete cached .xls material is re-inspected before unfinished review, preserving original response bytes and prior requests. The workbook parser does not decide scientific eligibility. Tests and bounds: full_workflow_access.README.md and tests/test_material_resume.py.
+# Binary metadata and explicit archive review
+
+The cached collector can reinterpret a complete, hashed HTTP-200 JSON metadata response with generic binary MIME; original bytes and request metadata remain unchanged. Explicit reviewer archive selections support legacy XLS and XLSX sheets with observed header rows. This adds no automatic scientific verdict. A changed interpreted bundle creates a new request/answer hash, preserving older proposals. See full_workflow_access.README.md and archive_review.README.md for bounds, state, audit, tests, retries and limitations.
+
+Officially verified PMC papers also receive bounded discovery through PMC's documented public cloud, with a separate per-round immutable checkpoint. Own identifiers and MD5 must match before resource inspection. This retrieves evidence only and does not mark sections as reviewed or change terminal results. Existing session answers remain bound to their exact evidence; new captures produce a new request instead of overwriting prior answers. See pmc_cloud.README.md for interfaces, audit, limits, failure states, retry/resume and offline tests.
+
+
+
+2026-11-09 recovery correction: full_workflow invokes recover_cloud_materials after bounded truncated-response recovery. It makes no requests and only reinterprets complete HTTP 200 file attempts whose exact URL was actually listed in accessible official PMC metadata matching the current paper's own PMID/PMCID/DOI/title. Recheck captured SHA256, byte length and metadata MD5 before making a generic-binary recovery accessible; keep the truncated attempt and original classification. A complete ZIP without selected tabular data remains response_sample, not verified structure or a confirmed dataset. Unknown/unlisted resources, wrong identities and checksum mismatches remain unresolved. Existing terminal records are untouched. Offline group now passes 30 tests, exit 0, including complete-vs-truncated recovery, idempotence, mismatch and unlisted/incorrect-identity cases. Existing archive size bounds remain in force.
+
+
+2026-11-09 JATS recovery: complete official PMC XML may declare an external JATS DTD while using generic binary MIME. The parser removes only a plain external article DOCTYPE for parsing; it never resolves the DTD, and internal subsets/entities remain rejected. Original XML bytes/text and hashes remain intact. On resume, recover_cloud_materials also rechecks cached fulltext objects against the exact metadata xml_url, own article identity and official MD5 before retrying XML interpretation. No new request, implicit body-review attestation or finalized-record rewrite follows recovery. Tests include external declaration, rejected entities/wrong identity, and cached XML with valid/invalid MD5. Related offline group: 38 passed, exit 0; the existing Windows pytest temp cleanup warning occurred after successful completion.
+
+
+## Per-paper progress Excel (2026-11-09)
+Inputs: the frozen batch source and latest SQLite revisions; IDs and source values remain unchanged. Outputs: `Output/2026-11-07/liver-15860-batch1500/In_Progress/DB_Select_00001-01500.xlsx` and its `.progress.json` manifest. Other batches use their original number range. Five sheets and the existing headers remain fixed.
+
+Algorithm/states: finish one paper, including immediate code-specific deep revalidation if required; commit SQLite and cumulative JSON/PRISMA; rebuild and verify the progress Excel; only then enter the next paper. The first sheet retains the complete batch input, with unfinished papers explicitly marked `미검수` / `검수 대기`. These rows are not final pending decisions. Terminal included + excluded + pending equals `processed_papers`; batch scope also includes unreviewed rows. Progress files are `IN_PROGRESS`, `downstream_ready=false`, and are replaceable projections, not finalized publications.
+
+Audit/units: immutable per-update manifests under `Runs/review/progress_excel` bind source, policy, template, paper IDs, PMIDs, revisions, timestamps and workbook SHA-256. Counts are papers, never requests or retry attempts. SQLite revisions and events remain append-only. Existing finalized publications are preserved.
+
+Validation/retries/resume: read back all five sheets, header order, values, identities, data links and counts before atomic replacement. Retry a locked workbook; if still blocked, stop before the next paper and retain the committed result and pending workbook bytes. Resume flushes this projection first, without repeating scientific review. Unknown user edits to the progress workbook are preserved and block replacement. A successful final batch still requires all normal final QC and immutable publication checks.
+
+Commands: resume the existing `python -m k_melloddy.db_select.batch_workflow --source INPUT.csv --root RUN_ROOT --publish OUTPUT_ROOT --organ Liver --batch-size 1500`; this invokes the progress hook automatically. Offline tests: `python -m pytest tests/test_progress_excel.py tests/test_batch_workflow.py tests/test_full_workflow.py -q`. Tests cover sequential save-before-next, interruption, lock failure, cached resume, manual edits and unchanged finalized records. Limitations: rebuilding Excel needs the artifact-tool runtime; manual scientific review requires actual reviewer answers. Progress Excel is not a completed batch or an unattended LLM service.
+

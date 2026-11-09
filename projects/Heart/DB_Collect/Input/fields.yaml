@@ -1,0 +1,19 @@
+fields:
+- PMID
+- DOI
+- PMCID
+- PII
+- Title
+- Abstract
+- Keywords
+- MeSH
+- Authors
+- Journal
+- Publication Date
+- Publication Type
+- Language
+- Volume/Issue/Pages
+- Affiliation
+- Grant
+- PubMed URL
+- Full Text

@@ -1,0 +1,36 @@
+batch_size: 200
+csv_bom: true
+date_end: null
+date_field: pdat
+date_start: null
+email: ''
+fields:
+- PMID
+- DOI
+- PMCID
+- PII
+- Title
+- Abstract
+- Keywords
+- MeSH
+- Authors
+- Journal
+- Publication Date
+- Publication Type
+- Language
+- Volume/Issue/Pages
+- Affiliation
+- Grant
+- PubMed URL
+- Full Text
+formats:
+- csv
+- json
+- txt
+id_order: numeric_pmid_ascending_first_seen
+page_size: 500
+partition_end: '2100-12-31'
+partition_start: '1800-01-01'
+partition_target: 9000
+sort: pub_date
+tool: k_melloddy

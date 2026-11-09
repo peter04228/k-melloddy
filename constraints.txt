@@ -1,0 +1,6 @@
+# Versions observed in the working environment on 2026-11-09.
+# This is a tested-package constraint set, not a full transitive lock file.
+PyYAML==6.0.3
+openpyxl==3.1.5
+xlrd==2.0.2
+pypdf==6.14.2

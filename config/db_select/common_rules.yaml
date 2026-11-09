@@ -1,0 +1,7 @@
+version: select-common-v1
+prompt_version: select-evidence-v1
+max_revalidation_attempts: 3
+max_urls: 12
+max_response_bytes: 262144
+timeout_seconds: 20
+provider: unconfigured

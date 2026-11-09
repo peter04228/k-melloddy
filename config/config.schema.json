@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "K-Melloddy collection config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sort": {
+      "type": "string"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "id_order": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "PMID",
+          "DOI",
+          "PMCID",
+          "PII",
+          "Title",
+          "Abstract",
+          "Keywords",
+          "MeSH",
+          "Authors",
+          "Journal",
+          "Publication Date",
+          "Publication Type",
+          "Language",
+          "Volume/Issue/Pages",
+          "Affiliation",
+          "Grant",
+          "PubMed URL",
+          "Full Text"
+        ]
+      }
+    },
+    "formats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "csv",
+          "json",
+          "txt",
+          "xlsx"
+        ]
+      }
+    },
+    "csv_bom": {
+      "type": "boolean"
+    },
+    "date_field": {
+      "enum": [
+        "pdat",
+        "edat"
+      ]
+    },
+    "date_start": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "date_end": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "partition_start": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "partition_end": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "partition_target": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+    },
+    "page_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "batch_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+    }
+  }
+}

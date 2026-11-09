@@ -1,0 +1,118 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "data_observations": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "quote": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidence_id",
+                "quote"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "public_status": {
+            "enum": [
+              "unknown",
+              "reported_public",
+              "verified_public",
+              "restricted",
+              "not_public"
+            ]
+          },
+          "relationship": {
+            "enum": [
+              "reuse",
+              "new",
+              "derived",
+              "unknown"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verification_level": {
+            "enum": [
+              "mentioned",
+              "landing_page",
+              "sample_structure",
+              "metadata_structure",
+              "full_file",
+              "unverified"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "relationship",
+          "public_status",
+          "verification_level",
+          "url",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "decision": {
+      "enum": [
+        "candidate",
+        "pending_relevance",
+        "E01",
+        "E02"
+      ]
+    },
+    "exposure": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "quote": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "relevance_class": {
+      "enum": [
+        "keyword_only",
+        "exposure_toxicity",
+        "uncertain_exposure_toxicity"
+      ]
+    },
+    "toxicity_endpoint": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision",
+    "reason",
+    "quote"
+  ],
+  "type": "object"
+}
