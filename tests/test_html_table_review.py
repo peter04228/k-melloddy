@@ -58,3 +58,24 @@ def test_malformed_or_ambiguous_tables_fail_without_inferred_cells(replacement):
 def test_source_identity_access_completeness_and_hash_are_required(field,value):
     bundle=evidence();bundle['records'][0][field]=value
     with pytest.raises(ValueError):selected_html_tables(bundle,[CHOICE])
+
+
+@pytest.mark.parametrize('before',[True,False])
+def test_unselected_equation_layout_does_not_change_selected_data_table(before):
+    equation='<table class="disp-formula"><tr><td>observed equation</td></tr></table>'
+    html=equation+HTML if before else HTML+equation
+    bundle=evidence(html);original=copy.deepcopy(bundle)
+    choice=dict(parent_evidence_id='article',table_index=1 if before else 0)
+    result=selected_html_tables(bundle,[choice]);record=result['records'][-1]
+    assert record['columns']==['Drug','ALT (U/L)','Outcome']
+    assert json.loads(record['text'])['sample'][1]==['observed B','not done','Improved']
+    assert record['html_table_selection']['table_index']==(1 if before else 0)
+    assert bundle==original and len(selected_html_tables(result,[choice])['records'])==2
+    with pytest.raises(ValueError,match='Explicit HTML header/body'):
+        selected_html_tables(bundle,[dict(parent_evidence_id='article',table_index=0 if before else 1)])
+
+
+@pytest.mark.parametrize('bad_index',[-1,True,1.0,'0',64])
+def test_selected_table_index_remains_explicit_and_bounded(bad_index):
+    with pytest.raises(ValueError,match='Invalid HTML table index'):
+        selected_html_tables(evidence(),[dict(parent_evidence_id='article',table_index=bad_index)])

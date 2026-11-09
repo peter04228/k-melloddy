@@ -6,9 +6,10 @@ from ..core.storage import digest, dump
 
 
 class Tables(HTMLParser):
-    def __init__(self):
+    def __init__(self,target_index=None):
         super().__init__(convert_charrefs=True)
         self.tables=[];self.table=None;self.row=None;self.cell=None;self.section=None
+        self.target_index=target_index;self.selected=True
 
     def handle_starttag(self,tag,attrs):
         attrs=dict(attrs)
@@ -16,6 +17,8 @@ class Tables(HTMLParser):
             if self.table is not None:raise ValueError('Nested HTML tables unsupported')
             if len(self.tables)>=64:raise ValueError('HTML table count limit')
             self.table={'head':[],'body':[]};self.tables.append(self.table)
+            self.selected=self.target_index is None or len(self.tables)-1==self.target_index
+        elif self.table is not None and not self.selected:return
         elif self.table is not None:
             if tag in {'thead','tbody','tfoot'}:self.section=tag
             elif tag=='tr':
@@ -34,6 +37,9 @@ class Tables(HTMLParser):
 
     def handle_endtag(self,tag):
         if self.table is None:return
+        if not self.selected:
+            if tag=='table':self.table=None;self.section=None
+            return
         if tag in {'td','th'}:
             if self.cell is None:raise ValueError('Missing HTML cell')
             self.cell['text']=' '.join(''.join(self.cell.pop('parts')).split())
@@ -70,9 +76,10 @@ def selected_html_tables(bundle,selections,paper=None):
         if len(raw)>8*1024*1024 or len(raw)!=parent['bytes_observed'] or digest(raw)!=parent['payload_sha256']:
             raise ValueError('HTML table source bytes changed or oversized')
         text=raw.decode('utf-8-sig')
-        parser=Tables();parser.feed(text);parser.close()
-        if parser.table is not None:raise ValueError('Incomplete HTML table')
         index=choice['table_index']
+        if type(index)!=int or not 0<=index<64:raise ValueError('Invalid HTML table index')
+        parser=Tables(target_index=index);parser.feed(text);parser.close()
+        if parser.table is not None:raise ValueError('Incomplete HTML table')
         if type(index)!=int or not 0<=index<len(parser.tables):raise ValueError('Invalid HTML table index')
         table=parser.tables[index];heads=table['head'];body=table['body']
         if not 1<=len(heads)<=8 or not body:raise ValueError('HTML table lacks header/data')
