@@ -2,6 +2,8 @@
 
 Algorithm: Perform a bounded fresh pending sweep, recording old/new decisions, current access attempts and next actions.
 
+2026-11-10 현재 논문별 실행: 최초 P코드를 SQLite에 저장한 다음 같은 논문의 재검증을 완료하고 다음 번호로 진행한다. P02의 경우 원문뿐 아니라 실제 접근에 실패한 보충 파일도 재시도한다. 초기 수집 뒤 발견된 보충 URL은 저장된 직전 검토의 URL·자료 종류·상태에서 가져오며, 실패한 보충 경로를 최대 4개 집중 요청 범위에서 우선한다. 같은 URL·자료 종류에 성공 응답이 있으면 과거 실패를 이유로 중복 요청하지 않는다. 직전 기록은 새 응답으로 위장하지 않으며 실제 재요청의 라운드·시각·상태·해시와 재사용 기록을 구분한다. 별도 정확한 제목/DOI 기반 Crossref 검색도 수행한다. 본문을 읽었으나 필수 부록이 막힌 경우와 본문 자체가 미확보인 경우를 구분하고, 재검증 완료 여부와 미해결 사유를 따로 기록한다. 기존 확정 기록·ID·원본·이전 시도는 보존한다. 중단 후에는 기존 라운드의 요청 캐시와 저장 원장에서 재개한다. 검증 명령: `.venv/Scripts/python.exe -m pytest tests/test_pending_access_targets.py tests/test_full_workflow.py tests/test_verified_select.py tests/test_revalidation_campaign.py tests/test_select_stabilization.py -q`. 이 테스트는 실제 외부 접근 없이 우선순위·중복 방지·직전 발견 경로의 새 요청 실행·P01/P03/P04 유지·이력 보존을 확인한다. 이 변경은 접근 성공이나 최종 판정을 자동 생성하지 않는다.
+
 Inputs: P01~P04 및 코드별 집중 작업
 
 Outputs: SQLite documents/events 및 JSON/revalidation_history.json

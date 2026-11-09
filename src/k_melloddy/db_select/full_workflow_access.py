@@ -20,6 +20,22 @@ from .access_workflow import material_kind
 from .evidence_collector import public_url
 
 
+def pending_access_targets(records,known_records,code):
+    """Select bounded observed routes; P02 must retry blocked supplements too."""
+    pool=list(records)+(list(known_records) if code=='P02' else [])
+    successful={(e.get('url'),e.get('kind')) for e in pool if e.get('status')=='accessible'}
+    kinds=({'fulltext','supplementary'} if code=='P02' else
+           {'repository','supplementary','landing','file','api'})
+    targets=[]
+    for e in pool:
+        pair=(e.get('url'),e.get('kind'))
+        if not pair[0] or pair[1] not in kinds or pair in targets:continue
+        if code=='P02' and (e.get('status')=='accessible' or pair in successful):continue
+        targets.append(pair)
+    if code=='P02':targets.sort(key=lambda pair:pair[1]!='supplementary')
+    return targets[:4]
+
+
 def recover_pdf_bytes(paper, record):
     """Inspect complete PDF bytes even when an institutional server mislabels MIME."""
     if (record.get('kind')!='fulltext' or not record.get('complete_body')
@@ -443,14 +459,8 @@ class FullWorkflowAccess(RevalidationAccess):
             bundle['action']=action
             bundle['focused_pending_code']=action.get('pending_code')
             for e in bundle['records']:e['reused_from_prior_round']=True
-            targets=[]
-            successful={e['url'] for e in bundle['records'] if e['status']=='accessible'}
-            for e in bundle['records']:
-                kinds={'fulltext'} if action.get('pending_code')=='P02' else {'repository','supplementary','landing','file','api'}
-                if e['kind'] in kinds and ((e['status']!='accessible' and e['url'] not in successful) or action.get('pending_code')!='P02'):
-                    pair=(e['url'],e['kind'])
-                    if pair not in targets:targets.append(pair)
-            for url,kind in targets[:4]:bundle['records']+=self.request(url,kind,paper,'focused_'+action.get('pending_code','pending'))
+            targets=pending_access_targets(bundle['records'],action.get('known_records',[]),action.get('pending_code'))
+            for url,kind in targets:bundle['records']+=self.request(url,kind,paper,'focused_'+action.get('pending_code','pending'))
             bundle['search_coverage'].append({'target':'prior_successful_searches','state':'reused_with_original_timestamps','pending_code':action.get('pending_code')})
         else:bundle=super().collect(paper,policy,action)
         seen={e['url'] for e in bundle['records']}
